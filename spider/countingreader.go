@@ -1,3 +1,6 @@
+// Author Daniel Schlaug
+// Written at Hong Kong University of Science and Technology in 2013
+
 package spider
 
 import (
