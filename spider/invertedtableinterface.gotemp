@@ -1,0 +1,10 @@
+package spider
+
+import (
+	"fmt"
+	"github.com/cznic/exp/dbm"
+)
+
+func StorePagesToInvTable(pages []Page) {
+	// IVTable must not use string as key but rather an ID.
+}

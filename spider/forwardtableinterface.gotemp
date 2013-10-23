@@ -1,0 +1,11 @@
+package spider
+
+func StorePagesToForwardTable(pages []Page) {
+	// FWTable must not use URL as key but rather an ID.
+	// Forward table should store TF, positions for words.
+	// Should use ID -> URL table for meta data.
+}
+
+func GetPagesFromDisk() []Page {
+
+}
