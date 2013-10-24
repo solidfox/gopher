@@ -1,11 +1,32 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"gopher/spider"
-	//"runtime"
+	"runtime"
 )
 
 func main() {
-	fmt.Println(spider.Get30Pages())
+	pages := spider.Get30Pages()
+	//i := 0
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	/*	for {
+			fmt.Println("waiting for pages")
+			fmt.Println((<-pageChan).Words())
+			i++
+			fmt.Println(i)
+			fmt.Print("Goroutines: ")
+			fmt.Println(runtime.NumGoroutine())
+		}
+	*/
+	table := spider.NewIndexHandler()
+	table.StorePages(pages)
+
+	spider.StorePagesToInvTable(table)
+	spider.StorePagesToForwardTable(table)
+	spider.StorePagesToPageInfo(table) // set wordMap too
+	//spider.SetWord(table)
+	//spider.DebugFowardtable()
+	//spider.DebugInvertedtable()
 }

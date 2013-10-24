@@ -1,10 +1,29 @@
-package spider
+package main
 
 import (
-	"os"
+	//"os"
 	"strconv"
-	"strings"
+	"fmt"
+	"time"
 )
+
+type Page struct {
+	words     map[string]positionList
+	wordCount int
+	links     []Link
+	Size      int64
+	Title     string
+	URL       string
+	Modified  time.Time
+	wordValid func(string) bool
+}
+
+type positionList []int
+type Link struct {
+	URL        string
+	AnchorText string
+}
+
 
 type IndexHandler struct {
 	// page		// word	// freq
@@ -21,15 +40,9 @@ type IndexHandler struct {
 	pageMapReverse map[string]int
 }
 
-func NewIndexHandler() *IndexHandler {
-	it := &IndexHandler{}
-	it.InitialIndexAndMaps()
-	return it
-}
+func (table *IndexHandler) StorePages(pages []Page) {
 
-func (table *IndexHandler) StorePages(pages []*Page) {
-
-	//table.InitialIndexAndMaps()
+	table.initialIndexAndMaps()
 
 	for _, eachPage := range pages {
 
@@ -66,7 +79,7 @@ func (table *IndexHandler) StorePages(pages []*Page) {
 func (ih *IndexHandler) PrintEntireIndex() {
 	// from http://stackoverflow.com/questions/1821811/how-to-read-write-from-to-file
 
-	fo, err := os.Create("spider_result.txt")
+	/*fo, err := os.Create("spider_result.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -76,53 +89,50 @@ func (ih *IndexHandler) PrintEntireIndex() {
 			panic(err)
 		}
 	}()
+	*/
 
 	//buf := make([]byte, 1024)
 
-	rdb := NewRelationalDB("sqlite.db")
+	for pageid, eachPage := range ih.pageMap {
 
-	for pageid, words := range ih.forwardIndex {
-		eachPage := rdb.GetPageInfoByPageID(int64(pageid))
-
-		fo.WriteString(eachPage.title + "\n" + eachPage.url)
-		fo.WriteString("\n")
-		fo.WriteString(eachPage.date.String() + ", ")
-		fo.WriteString(strconv.FormatInt(eachPage.size, 10))
-		fo.WriteString("\n")
+		fmt.Print(eachPage.Title + "\n" + eachPage.URL)
+		fmt.Print("\n")
+		fmt.Print(eachPage.Modified.String() + ", ")
+		fmt.Print(strconv.FormatInt(eachPage.Size, 10))
+		fmt.Print("\n")
 
 		for eachWordId, eachWordFreq := range ih.forwardIndex[pageid] {
-			fo.WriteString(ih.wordMap[eachWordId] + ", " + strconv.Itoa(len(eachWordFreq)) + "; ")
+			fmt.Print(ih.wordMap[eachWordId] + ", " + strconv.Itoa(len(eachWordFreq)) + "; ")
 		}
 
-		fo.WriteString("\n")
+		fmt.Print("\n")
 
-		pageLinks := strings.Fields(eachPage.childLinks)
-		for _, eachLink := range pageLinks {
-			fo.WriteString(eachLink + "\n")
+		for _, eachLink := range ih.pageMap[pageid].links {
+			fmt.Print( eachLink.URL + "\n")
 		}
 
-		fo.WriteString("-------------------------------------------------------------------------------------------\n")
+		fmt.Print("-------------------------------------------------------------------------------------------\n")
 
 	}
 }
 
-func (table *IndexHandler) InitialIndexAndMaps() {
+func (table *IndexHandler) initialIndexAndMaps() {
 
 	table.wordMap = make(map[int]string)
-	table.pageMap = make(map[int]Page)
-
-	table.pageMapReverse = make(map[string]int)
 	table.wordMapReverse = make(map[string]int)
+
+	table.pageMap = make(map[int]Page)
+	table.pageMapReverse = make(map[string]int)
 
 	// will change to db if necessary
 	table.forwardIndex = make(map[int]map[int][]int)
 	table.invertedIndex = make(map[int]map[int]bool)
 }
 
-func (table *IndexHandler) addPageToMappingTable(page *Page) (bool, int) {
+func (table *IndexHandler) addPageToMappingTable(page Page) (bool, int) {
 	_, ok := table.pageMapReverse[page.URL]
 	if !ok {
-		table.pageMap[len(table.pageMap)] = *page
+		table.pageMap[len(table.pageMap)] = page
 		table.pageMapReverse[page.URL] = len(table.pageMap) - 1
 
 	}
@@ -137,4 +147,30 @@ func (table *IndexHandler) addWordToMappingTable(word string) (bool, int) {
 
 	}
 	return ok, table.wordMapReverse[word]
+}
+
+
+func main() {
+	//fmt.Println("Hello, playground")
+	
+	wordList := make(map[string] positionList)
+	wordList["a"] = positionList{1,2}
+	wordList["b"] = positionList{1,2,4}
+
+	testPage1 := Page{ wordList, 1, []Link{ {"http://1.com", "anchorage"}, {"http://2.com", "anchorage"}}, 1, "haa", "http://haha.com", time.Now(), nil}
+	//fmt.Println(testPage1)
+	
+	testPage2 := Page{ wordList, 1, []Link{ {"http://2.com", "anchorage"}, {"http://1.com", "anchorage"}}, 1, "yo", "http://yo.com", time.Now(), nil}
+	//fmt.Println(testPage2)
+	
+	fullPage := make([]Page,2)
+	fullPage[0] = testPage1
+	//fmt.Println(testPage1)
+	fullPage[1] = testPage2	
+	
+	table := &IndexHandler{}
+	table.StorePages(fullPage)
+	table.PrintEntireIndex()
+
+	
 }

@@ -1,6 +1,9 @@
 Written in go gopher's spider is easily run in any go environment by running 
 $ go run main.go
 
+And print the index from db by running
+$ go run print.go
+
 You can download and install Go from http://golang.org.
 
 Requires code.google.com/p/go.net/html package which can be installed by running 

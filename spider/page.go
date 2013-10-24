@@ -26,6 +26,7 @@ type Link struct {
 // Size is the size of the page in bytes.
 // Modified is the Last-Modified field or Date field of the page's http header.
 type Page struct {
+	PageID    int64
 	words     map[string]positionList
 	wordCount int
 	links     []Link
@@ -39,6 +40,7 @@ type Page struct {
 func NewPage(url string, modified time.Time, wordValid func(string) bool) *Page {
 	url = strings.Trim(url, "/")
 	return &Page{
+		-1,
 		make(map[string]positionList),
 		0,
 		make([]Link, 0, DefaultLinksLength),
