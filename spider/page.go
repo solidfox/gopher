@@ -16,7 +16,12 @@ const (
 	DefaultLinksLength
 )
 
-type RawWord []byte
+type Word struct {
+	WordID    int
+	Word      string
+	positions []int
+}
+
 type positionList []int
 type Link struct {
 	URL        string
@@ -28,7 +33,7 @@ type Link struct {
 // Modified is the Last-Modified field or Date field of the page's http header.
 type Page struct {
 	PageID    int64
-	words     map[string]positionList
+	words     map[string]*Word
 	wordCount int
 	links     []Link
 	Size      int64
@@ -70,28 +75,27 @@ func NewPage(url string) *Page {
 // If the word already exists only the position is added.
 // Duplicates and stopwords are ignored.
 func (p *Page) AddWord(word string) {
-	newWord := strings.TrimSpace(word)
-	if newWord == "" {
+	word = strings.TrimSpace(word)
+	if word == "" {
 		return
 	}
-	newWord = strings.ToLower(newWord)
-	if !p.wordValid(newWord) {
+	word = strings.ToLower(word)
+	if !p.wordValid(word) {
 		return
 	}
-	newWord = string(stemmer.Stem([]byte(newWord)))
+	word = string(stemmer.Stem([]byte(word)))
 
-	positions, exists := p.words[newWord]
+	wordObj, exists := p.words[word]
 	position := p.wordCount + 1
 	if !exists {
-		positions = make(positionList, 1, DefaultPositionsLength)
-		positions[0] = position
-	} else {
-		positions = append(positions, position)
+		wordObj = NewWord(word)
 	}
-	p.words[newWord] = positions
+	wordObj.positions = append(wordObj.positions, position)
+	p.words[word] = wordObj
 	p.wordCount++
 }
 
+// Adds all words in the text, separated by any match of "[[:space:][:punct:][:cntrl:]]+"
 func (p *Page) AddText(text string) {
 	text = strings.TrimSpace(text)
 	whiteSpace, _ := regexp.Compile("[[:space:][:punct:][:cntrl:]]+")
@@ -114,12 +118,12 @@ func (p *Page) AddLink(relativeURL string, text string) {
 	}
 }
 
-func (p *Page) Words() []Word {
+func (p *Page) Words() []*Word {
 	n := len(p.words)
 	wordSlice := make([]Word, n)
 	i := 0
-	for word, positions := range p.words {
-		wordSlice[i] = Word{word, positions}
+	for word, wordObj := range p.words {
+		wordSlice[i] = wordObj
 		i++
 	}
 	return wordSlice
@@ -129,9 +133,20 @@ func (p *Page) Links() []Link {
 	return p.links
 }
 
-type Word struct {
-	Word      string
-	positions []int
+func NewWord(word string) *Page {
+	return &Word{
+		WordID:    -1,
+		Word:      word,
+		positions: make([]int, 1, DefaultPositionsLength),
+	}
+}
+
+func (w *Word) AddPositions(positions []int) {
+	if len(w.positions) == 0 {
+		w.positions = positions
+	} else {
+		w.positions = append(w.positions, positions)
+	}
 }
 
 func (w *Word) Positions() []int {
