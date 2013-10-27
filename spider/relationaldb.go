@@ -3,6 +3,8 @@ package spider
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+	"os"
+	"strings"
 	"time"
 )
 
@@ -21,10 +23,6 @@ CREATE TABLE 'words' (
 );
 */
 
-const (
-	DateFormat = "2006-01-02 15:04:05"
-)
-
 type RelationalDB struct {
 	db *sql.DB
 }
@@ -38,79 +36,132 @@ type PageInfo struct {
 	childLinks string
 }
 
-func NewRelationalDB(dbpath string) (rdb *RelationalDB) {
+func NewRelationalDB(dbpath string) *RelationalDB {
+	_, fileLoadErr := os.Stat(dbpath)
+	dbDidNotExist := os.IsNotExist(fileLoadErr)
+
 	db, err := sql.Open("sqlite3", dbpath)
-	// db.Exec("DELETE from pageInfo WHERE pageID >= 0")
 	if err != nil {
 		panic(err)
 	}
-	rdb = &RelationalDB{
+
+	if dbDidNotExist {
+		db.Exec(
+			"CREATE TABLE pageInfo (" +
+				"pageID 		INTEGER PRIMARY KEY AUTOINCREMENT," +
+				"size 			INTEGER," +
+				"url 			TEXT UNIQUE," +
+				"modifiedDate 	DATETIME," +
+				"title 			TEXT," +
+				"childLinks 	TEXT" +
+				")")
+		db.Exec(
+			"CREATE TABLE words (" +
+				"word		TEXT UNIQUE," +
+				"wordID	INTEGER PRIMARY KEY AUTOINCREMENT" +
+				")")
+	}
+
+	return &RelationalDB{
 		db,
 	}
-	return rdb
 }
 
-// //Removes all data from DB
-// func (rdb *RelationalDB) Clear() {
-
-// }
-
-func (rdb *RelationalDB) InsertPageInfo(pInfo *PageInfo) {
-	rdb.db.Exec(
-		"INSERT OR IGNORE INTO 'pageInfo' "+
-			"VALUES (?, ?, ?, datetime(?), ?, ?)",
-		pInfo.id, pInfo.size, pInfo.url, pInfo.date, pInfo.title, pInfo.childLinks)
+//Removes all data from DB
+func (rdb *RelationalDB) Clear() {
+	rdb.db.Exec("DELETE from pageInfo WHERE pageID >= 0")
+	rdb.db.Exec("DELETE from words WHERE wordID >= 0")
 }
 
-func (rdb *RelationalDB) InsertWord(word string) {
-	rdb.db.Exec("INSERT OR IGNORE into words VALUES (?, DEFAULT)", word)
-}
-
-func (rdb *RelationalDB) WordIDOf(word string) (wordID int64) {
-	rows, err := rdb.db.Query(
-		"SELECT wordID FROM words WHERE word = ?", word)
-	if err == nil && rows.Next() {
-		rows.Scan(&wordID)
-		rows.Close()
-		return pInfo
-	} else {
-		return nil
+func (rdb *RelationalDB) InsertPagesAndSetIDs(pages []*Page) {
+	tx := rdb.db.Begin()
+	for p := range pages {
+		if p.PageID == -1 {
+			tx.Exec(
+				"INSERT OR IGNORE INTO 'pageInfo' "+
+					"VALUES (default, ?, ?, datetime(?), ?, ?)",
+				p.Size, p.URL, p.Modified, p.Title, strings.Join(p.Links(), " "))
+			row := tx.QueryRow("SELECT pageID FROM pageInfo WHERE url = ?", p.URL)
+			row.Scan(&p.PageID)
+		}
 	}
+	tx.Commit()
 }
 
-func (rdb *RelationalDB) WordOf(wordID int64) (word string) {
-	rows, err := rdb.db.Query(
-		"SELECT wordID FROM words WHERE wordID = ?", wordID)
-	if err == nil && rows.Next() {
-		rows.Scan(&wordID)
-		rows.Close()
-		return pInfo
-	} else {
-		return nil
+func (rdb *RelationalDB) InsertWordsAndSetIDs(words []Word) {
+	tx := rdb.db.Begin()
+	for w := range words {
+		if w.WordID == -1 {
+			rdb.db.Exec("INSERT OR IGNORE into words VALUES (?, DEFAULT)", word)
+			row := tx.QueryRow("SELECT wordID FROM words WHERE word = ?", w.Word)
+			row.Scan(&w.WordID)
+		}
 	}
+	tx.Commit()
 }
 
 func (rdb *RelationalDB) Close() {
 	rdb.db.Close()
 }
 
-func (rdb *RelationalDB) GetPageInfoByPageID(pageID int64) (pInfo *PageInfo) {
-	// var datestring string
-	pInfo = &PageInfo{
-		0,
-		0,
-		"",
-		time.Now(),
-		"",
-		"",
+func (rdb *RelationalDB) PageByPageID(pageID int64) (p *Page) {
+	p = NewPage("")
+	rdb.CompleteThePageInfoOf([]*Page{p})
+	return p
+}
+
+// Uses the Page's PageID to fill out all information about the page except the words it
+// contains (since those are not held in the relational db).
+func (rdb *RelationalDB) CompleteThePageInfoOf(pages []*Page) {
+	var links string
+	tx := rdb.db.Begin()
+	for p := range pages {
+		if p.PageID != -1 {
+			row := tx.QueryRow("SELECT * FROM pageInfo WHERE pageID = ?", p.PageID)
+			row.Scan(&p.PageID, &p.Size, &p.URL, &p.Modified, &p.Title, &links)
+			linkSlice := strings.Fields(links)
+			for link := range linkSlice {
+				p.AddLink(link, "")
+			}
+		}
 	}
-	rows, err := rdb.db.Query(
-		"SELECT * FROM pageInfo WHERE pageID = ?", pageID)
-	if err == nil && rows.Next() {
-		rows.Scan(&pInfo.id, &pInfo.size, &pInfo.url, &pInfo.date, &pInfo.title, &pInfo.childLinks)
-		rows.Scan()
-		return pInfo
-	} else {
-		return nil
+	tx.Commit()
+}
+
+// Fills out the Word's WordID provided that it's Word field is not the empty string.
+func (rdb *RelationalDB) AddWordIDTo(words []*Word) {
+	tx := rdb.db.Begin()
+	for w := range words {
+		if w.Word != "" {
+			row := tx.QueryRow("SELECT wordID FROM words WHERE word = ?", w.Word)
+			row.Scan(&w.WordID)
+		}
 	}
+	tx.Commit()
+}
+
+// Fills out the Word's Word field provided that it's WordID field is not -1.
+func (rdb *RelationalDB) AddWordWordTo(words []*Word) {
+	tx := rdb.db.Begin()
+	for w := range words {
+		if w.WordID != -1 {
+			row := tx.QueryRow("SELECT word FROM words WHERE wordID = ?", w.WordID)
+			row.Scan(&w.WordID)
+		}
+	}
+	tx.Commit()
+}
+
+func (rdb *RelationalDB) WordIDOf(word string) (wordID int64) {
+	row := rdb.db.QueryRow(
+		"SELECT wordID FROM words WHERE word = ?", word)
+	row.Scan(&wordID)
+	return wordID
+}
+
+func (rdb *RelationalDB) WordOf(wordID int64) (word string) {
+	row := rdb.db.QueryRow(
+		"SELECT word FROM words WHERE wordID = ?", wordID)
+	row.Scan(&word)
+	return word
 }
