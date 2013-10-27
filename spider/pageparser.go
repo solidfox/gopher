@@ -29,21 +29,21 @@ const (
 	RootPage         = "http://www.cse.ust.hk/"
 )
 
-type DNSCache struct {
+type dnsCache struct {
 	isParsed map[string]bool
 	dnsMap   map[string]string
 	urlList  *list.List
 }
 
-func newDNSCache() *DNSCache {
-	return &DNSCache{
+func newDNSCache() *dnsCache {
+	return &dnsCache{
 		make(map[string]bool),
 		make(map[string]string),
 		list.New(),
 	}
 }
 
-func (d *DNSCache) addURL(pageUrl string) {
+func (d *dnsCache) addURL(pageUrl string) {
 	if !d.isParsed[pageUrl] {
 		d.isParsed[pageUrl] = true
 		urlObj, _ := url.Parse(pageUrl)
@@ -64,28 +64,18 @@ func (d *DNSCache) addURL(pageUrl string) {
 	}
 }
 
-func (d *DNSCache) hasURL() bool {
+func (d *dnsCache) hasURL() bool {
 	return d.urlList.Len() > 0
 }
 
-func (d *DNSCache) getURL() string {
+func (d *dnsCache) getURL() string {
 	first := d.urlList.Remove(d.urlList.Front())
 	if theUrl, ok := first.(string); ok {
 		return theUrl
 	} else {
-		log.Fatalln("DNSCache: Tried to get a URL that was not a string.")
+		log.Fatalln("dnsCache: Tried to get a URL that was not a string.")
 	}
 	return ""
-}
-
-func wordValidator(fileName string) func(string) bool {
-	stopwordFile, _ := ioutil.ReadFile(fileName)
-	stopwords := sort.StringSlice(strings.Fields(string(stopwordFile)))
-	stopwords.Sort()
-	return func(word string) bool {
-		index := stopwords.Search(word)
-		return index >= len(stopwords) || stopwords[index] != word
-	}
 }
 
 func Get30Pages() []*Page {
@@ -186,7 +176,8 @@ func ParsePage(pageUrl string) *Page {
 	if dateHeaderList != nil {
 		pageDate, _ = time.Parse("Mon, 2 Jan 2006 15:04:05 MST", dateHeaderList[0])
 	}
-	p := NewPage(pageUrl, pageDate, wordValidator("stopwords.txt"))
+	p := NewPage(pageUrl)
+	p.Modified = pageDate
 
 	// log.Println("Will trigger tokenizer.")
 	body := NewCountingReader(res.Body)

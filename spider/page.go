@@ -23,6 +23,7 @@ type Link struct {
 	AnchorText string
 }
 
+// PageID is a database's unique integer identifier for the page. If none is set the value is -1.
 // Size is the size of the page in bytes.
 // Modified is the Last-Modified field or Date field of the page's http header.
 type Page struct {
@@ -37,18 +38,30 @@ type Page struct {
 	wordValid func(string) bool
 }
 
-func NewPage(url string, modified time.Time, wordValid func(string) bool) *Page {
+var stopwords []string
+
+func defaultWordValidator(s string) bool {
+	if len(stopwords) == 0 {
+		stopwordFile, _ := ioutil.ReadFile(fileName)
+		stopwords := sort.StringSlice(strings.Fields(string(stopwordFile)))
+		stopwords.Sort()
+	}
+
+	return func(word string) bool {
+		index := stopwords.Search(word)
+		return index >= len(stopwords) || stopwords[index] != word
+	}
+}
+
+func NewPage(url string) *Page {
 	url = strings.Trim(url, "/")
 	return &Page{
-		-1,
-		make(map[string]positionList),
-		0,
-		make([]Link, 0, DefaultLinksLength),
-		0,
-		"",
-		url,
-		modified,
-		wordValid,
+		PageID:    -1,
+		words:     make(map[string]positionList),
+		wordCount: 0,
+		links:     make([]Link, 0, DefaultLinksLength),
+		URL:       url,
+		wordValid: defaultWordValidator,
 	}
 }
 
