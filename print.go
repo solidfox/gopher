@@ -6,6 +6,45 @@ import (
 	//"runtime"
 )
 
+func PrintEntireIndex(pages []*) {
+	// from http://stackoverflow.com/questions/1821811/how-to-read-write-from-to-file
+
+	fo, err := os.Create("spider_result.txt")
+	if err != nil {
+		panic(err)
+	}
+	// close fo on exit and check for its returned error
+	defer func() {
+		if err := fo.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	for i, page := range pages{
+
+		fo.WriteString(page.Title + "\n" + page.URL)
+		fo.WriteString("\n")
+		fo.WriteString(page.Modified.String() + ", ")
+		fo.WriteString(strconv.FormatInt(page.Size, 10))
+		fo.WriteString("\n")
+
+		for word, wordFreq := range page.words {
+			fo.WriteString( word + ", " + strconv.Itoa(len(wordFreq)) + "; ")
+		}
+		fo.WriteString("\n")
+
+		//pageLinks := strings.Fields(page.childLinks)
+		for _, link := range page.Links {
+			fo.WriteString(link + "\n")
+		}
+
+		fo.WriteString("-------------------------------------------------------------------------------------------\n")
+	}
+
+}
+
+
+
 func main() {
 	/*	pageChan := spider.GetPages()
 		i := 0
@@ -20,8 +59,10 @@ func main() {
 			fmt.Println(runtime.NumGoroutine())
 		}*/
 
-	table := indexHandler
-	table.InitialIndexAndMaps()
-	SetTablesFromDB(table)
-	table.PrintEntrieIndex()
+	//table := indexHandler
+	//table.InitialIndexAndMaps()
+	//SetTablesFromDB(table)
+	
+	// pages := getPagesFromDb()
+	PrintEntrieIndex(pages)
 }
