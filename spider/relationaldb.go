@@ -5,7 +5,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"strings"
-	"time"
 )
 
 /*
@@ -25,15 +24,6 @@ CREATE TABLE 'words' (
 
 type RelationalDB struct {
 	db *sql.DB
-}
-
-type PageInfo struct {
-	id         int64
-	size       int64
-	url        string
-	date       time.Time
-	title      string
-	childLinks string
 }
 
 func NewRelationalDB(dbpath string) *RelationalDB {
@@ -74,13 +64,18 @@ func (rdb *RelationalDB) Clear() {
 }
 
 func (rdb *RelationalDB) InsertPagesAndSetIDs(pages []*Page) {
-	tx := rdb.db.Begin()
-	for p := range pages {
+	tx, _ := rdb.db.Begin()
+
+	for _, p := range pages {
+		links := make([]string, len(p.Links()))
+		for i, link := range p.Links() {
+			links[i] = link.URL
+		}
 		if p.PageID == -1 {
 			tx.Exec(
 				"INSERT OR IGNORE INTO 'pageInfo' "+
 					"VALUES (default, ?, ?, datetime(?), ?, ?)",
-				p.Size, p.URL, p.Modified, p.Title, strings.Join(p.Links(), " "))
+				p.Size, p.URL, p.Modified, p.Title, strings.Join(links, " "))
 			row := tx.QueryRow("SELECT pageID FROM pageInfo WHERE url = ?", p.URL)
 			row.Scan(&p.PageID)
 		}
@@ -88,11 +83,11 @@ func (rdb *RelationalDB) InsertPagesAndSetIDs(pages []*Page) {
 	tx.Commit()
 }
 
-func (rdb *RelationalDB) InsertWordsAndSetIDs(words []Word) {
-	tx := rdb.db.Begin()
-	for w := range words {
+func (rdb *RelationalDB) InsertWordsAndSetIDs(words []*Word) {
+	tx, _ := rdb.db.Begin()
+	for _, w := range words {
 		if w.WordID == -1 {
-			rdb.db.Exec("INSERT OR IGNORE into words VALUES (?, DEFAULT)", word)
+			rdb.db.Exec("INSERT OR IGNORE into words VALUES (?, DEFAULT)", w.Word)
 			row := tx.QueryRow("SELECT wordID FROM words WHERE word = ?", w.Word)
 			row.Scan(&w.WordID)
 		}
@@ -105,7 +100,7 @@ func (rdb *RelationalDB) Close() {
 }
 
 func (rdb *RelationalDB) PageByPageID(pageID int64) (p *Page) {
-	p = NewPage("")
+	p = NewPage()
 	rdb.CompleteThePageInfoOf([]*Page{p})
 	return p
 }
@@ -114,13 +109,13 @@ func (rdb *RelationalDB) PageByPageID(pageID int64) (p *Page) {
 // contains (since those are not held in the relational db).
 func (rdb *RelationalDB) CompleteThePageInfoOf(pages []*Page) {
 	var links string
-	tx := rdb.db.Begin()
-	for p := range pages {
+	tx, _ := rdb.db.Begin()
+	for _, p := range pages {
 		if p.PageID != -1 {
 			row := tx.QueryRow("SELECT * FROM pageInfo WHERE pageID = ?", p.PageID)
 			row.Scan(&p.PageID, &p.Size, &p.URL, &p.Modified, &p.Title, &links)
 			linkSlice := strings.Fields(links)
-			for link := range linkSlice {
+			for _, link := range linkSlice {
 				p.AddLink(link, "")
 			}
 		}
@@ -130,8 +125,8 @@ func (rdb *RelationalDB) CompleteThePageInfoOf(pages []*Page) {
 
 // Fills out the Word's WordID provided that it's Word field is not the empty string.
 func (rdb *RelationalDB) AddWordIDTo(words []*Word) {
-	tx := rdb.db.Begin()
-	for w := range words {
+	tx, _ := rdb.db.Begin()
+	for _, w := range words {
 		if w.Word != "" {
 			row := tx.QueryRow("SELECT wordID FROM words WHERE word = ?", w.Word)
 			row.Scan(&w.WordID)
@@ -142,8 +137,8 @@ func (rdb *RelationalDB) AddWordIDTo(words []*Word) {
 
 // Fills out the Word's Word field provided that it's WordID field is not -1.
 func (rdb *RelationalDB) AddWordWordTo(words []*Word) {
-	tx := rdb.db.Begin()
-	for w := range words {
+	tx, _ := rdb.db.Begin()
+	for _, w := range words {
 		if w.WordID != -1 {
 			row := tx.QueryRow("SELECT word FROM words WHERE wordID = ?", w.WordID)
 			row.Scan(&w.WordID)
@@ -159,7 +154,7 @@ func (rdb *RelationalDB) WordIDOf(word string) (wordID int64) {
 	return wordID
 }
 
-func (rdb *RelationalDB) WordOf(wordID int64) (word string) {
+func (rdb *RelationalDB) WordOf(wordID int) (word string) {
 	row := rdb.db.QueryRow(
 		"SELECT word FROM words WHERE wordID = ?", wordID)
 	row.Scan(&word)

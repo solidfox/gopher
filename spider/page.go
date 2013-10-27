@@ -5,8 +5,10 @@ package spider
 
 import (
 	"gopher/stemmer"
+	"io/ioutil"
 	"net/url"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
@@ -45,28 +47,26 @@ type Page struct {
 
 var stopwords []string
 
-func defaultWordValidator(s string) bool {
+func defaultWordValidator() func(string) bool {
 	if len(stopwords) == 0 {
-		stopwordFile, _ := ioutil.ReadFile(fileName)
+		stopwordFile, _ := ioutil.ReadFile("stopwords.txt")
 		stopwords := sort.StringSlice(strings.Fields(string(stopwordFile)))
 		stopwords.Sort()
 	}
 
 	return func(word string) bool {
-		index := stopwords.Search(word)
+		index := sort.SearchStrings(stopwords, word)
 		return index >= len(stopwords) || stopwords[index] != word
 	}
 }
 
-func NewPage(url string) *Page {
-	url = strings.Trim(url, "/")
+func NewPage() *Page {
 	return &Page{
 		PageID:    -1,
-		words:     make(map[string]positionList),
+		words:     make(map[string]*Word),
 		wordCount: 0,
 		links:     make([]Link, 0, DefaultLinksLength),
-		URL:       url,
-		wordValid: defaultWordValidator,
+		wordValid: defaultWordValidator(),
 	}
 }
 
@@ -74,7 +74,7 @@ func NewPage(url string) *Page {
 // The word will be assigned the next position.
 // If the word already exists only the position is added.
 // Duplicates and stopwords are ignored.
-func (p *Page) AddWord(word string) {
+func (p *Page) addWordFromText(word string) {
 	word = strings.TrimSpace(word)
 	if word == "" {
 		return
@@ -95,13 +95,20 @@ func (p *Page) AddWord(word string) {
 	p.wordCount++
 }
 
+// A
+func (p *Page) AddWords(words []*Word) {
+	for _, word := range words {
+		p.words[word.Word] = word
+	}
+}
+
 // Adds all words in the text, separated by any match of "[[:space:][:punct:][:cntrl:]]+"
 func (p *Page) AddText(text string) {
 	text = strings.TrimSpace(text)
 	whiteSpace, _ := regexp.Compile("[[:space:][:punct:][:cntrl:]]+")
 	words := whiteSpace.Split(text, -1)
 	for _, word := range words {
-		p.AddWord(word)
+		p.addWordFromText(word)
 	}
 }
 
@@ -120,9 +127,9 @@ func (p *Page) AddLink(relativeURL string, text string) {
 
 func (p *Page) Words() []*Word {
 	n := len(p.words)
-	wordSlice := make([]Word, n)
+	wordSlice := make([]*Word, n)
 	i := 0
-	for word, wordObj := range p.words {
+	for _, wordObj := range p.words {
 		wordSlice[i] = wordObj
 		i++
 	}
@@ -133,7 +140,7 @@ func (p *Page) Links() []Link {
 	return p.links
 }
 
-func NewWord(word string) *Page {
+func NewWord(word string) *Word {
 	return &Word{
 		WordID:    -1,
 		Word:      word,
@@ -145,7 +152,10 @@ func (w *Word) AddPositions(positions []int) {
 	if len(w.positions) == 0 {
 		w.positions = positions
 	} else {
-		w.positions = append(w.positions, positions)
+		for _, pos := range positions {
+			w.positions = append(w.positions, pos)
+		}
+		//w.positions = append(w.positions, positions)
 	}
 }
 

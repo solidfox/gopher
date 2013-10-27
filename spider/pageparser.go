@@ -9,12 +9,12 @@ import (
 	// "io/ioutil"
 	"bytes"
 	"container/list"
-	"io/ioutil"
+	//"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
-	"sort"
+	//"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -176,7 +176,8 @@ func ParsePage(pageUrl string) *Page {
 	if dateHeaderList != nil {
 		pageDate, _ = time.Parse("Mon, 2 Jan 2006 15:04:05 MST", dateHeaderList[0])
 	}
-	p := NewPage(pageUrl)
+	p := NewPage()
+	p.URL = pageUrl
 	p.Modified = pageDate
 
 	// log.Println("Will trigger tokenizer.")
