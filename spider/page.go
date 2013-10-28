@@ -120,9 +120,17 @@ func (p *Page) AddLink(relativeURL string, text string) {
 		return
 	}
 	newURI := baseURI.ResolveReference(parsedRelativeURL)
-	if strings.HasPrefix(newURI.String(), "http") {
+	if isValidHtmlLink(newURI.String()) {
 		p.links = append(p.links, Link{newURI.String(), text})
 	}
+}
+
+func isValidHtmlLink(link string) bool {
+	return strings.HasPrefix(link, "http") &&
+		!strings.HasSuffix(link, ".pdf") &&
+		!strings.HasSuffix(link, ".doc") &&
+		!strings.HasSuffix(link, ".docx") &&
+		!strings.HasSuffix(link, ".ppt")
 }
 
 func (p *Page) Words() []*Word {
