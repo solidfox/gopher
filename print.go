@@ -21,7 +21,7 @@ func PrintEntireIndex(pages []*spider.Page) {
 		}
 	}()
 
-	for i, page := range pages {
+	for _, page := range pages {
 
 		fo.WriteString(page.Title + "\n" + page.URL)
 		fo.WriteString("\n")
@@ -29,14 +29,14 @@ func PrintEntireIndex(pages []*spider.Page) {
 		fo.WriteString(strconv.FormatInt(page.Size, 10))
 		fo.WriteString("\n")
 
-		for word, wordFreq := range page.words {
-			fo.WriteString(word + ", " + strconv.Itoa(len(wordFreq)) + "; ")
+		for _, word := range page.Words() {
+			fo.WriteString(word.Word + ", " + strconv.Itoa(len(word.Positions())) + "; ")
 		}
 		fo.WriteString("\n")
 
 		//pageLinks := strings.Fields(page.childLinks)
-		for _, link := range page.Links {
-			fo.WriteString(link + "\n")
+		for _, link := range page.Links() {
+			fo.WriteString(link.URL + "\n")
 		}
 
 		fo.WriteString("-------------------------------------------------------------------------------------------\n")
@@ -63,5 +63,5 @@ func main() {
 	//SetTablesFromDB(table)
 
 	// pages := getPagesFromDb()
-	PrintEntrieIndex(spider.Get30Pages())
+	PrintEntireIndex(spider.Get30Pages())
 }
