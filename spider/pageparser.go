@@ -106,7 +106,7 @@ func GetPages() <-chan *Page {
 				case newURL := <-urlChannel:
 					urls.addURL(newURL)
 				case <-time.After((ConnectTimeout + ReadWriteTimeout) * time.Second):
-					log.Fatalln("No new links to follow.")
+					log.Fatalln("Reached the end of the internet. (No new links to follow.)")
 				}
 			}
 
@@ -159,10 +159,10 @@ func ParsePage(pageUrl string) *Page {
 	res, err := client.Get(pageUrl)
 	// log.Println(" " + pageUrl + " post")
 	if err != nil {
-		log.Println(err)
+		//log.Println(err)
 		return nil
 	} else if res.StatusCode != 200 {
-		log.Println(res)
+		//log.Println(res)
 		return nil
 	}
 	// res.Body != nil when err == nil
@@ -186,7 +186,7 @@ func ParsePage(pageUrl string) *Page {
 	// log.Println("Tokenizer triggered.")
 	for {
 		if body.ByteCount() > MaxBytes {
-			log.Println(pageUrl + ": " + strconv.FormatInt(body.ByteCount(), 10))
+			log.Println("Skipping page larger than " + MaxBytes + ": " + strconv.FormatInt(body.ByteCount(), 10) + " (" + pageUrl + ")")
 			return nil
 		}
 		token := z.Next()
