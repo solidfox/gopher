@@ -23,7 +23,7 @@ import (
 const (
 	ChannelBuffer    = 100
 	MaxBytes         = 1000000
-	FetchRoutines    = 200
+	FetchRoutines    = 100
 	ConnectTimeout   = 30
 	ReadWriteTimeout = 30
 	RootPage         = "http://www.cse.ust.hk/"
@@ -46,26 +46,30 @@ func newDNSCache() *dnsCache {
 func (d *dnsCache) addURL(pageUrl string) {
 	if !d.isParsed[pageUrl] {
 		d.isParsed[pageUrl] = true
-		urlObj, _ := url.Parse(pageUrl)
-		hostparts := strings.Split(urlObj.Host, ":")
-		ip, exists := d.dnsMap[hostparts[0]]
-		if !exists {
-			rawIp, err := net.LookupIP(hostparts[0])
-			if err != nil {
-				return
-			}
-			ip = rawIp[0].String()
-			d.dnsMap[hostparts[0]] = ip
-		}
-		hostparts[0] = ip
-		urlObj.Host = strings.Join(hostparts, ":")
-		pageUrl = urlObj.String()
 		d.urlList.PushBack(pageUrl)
 	}
 }
 
 func (d *dnsCache) hasURL() bool {
 	return d.urlList.Len() > 0
+}
+
+// Returns the passed url with the hostname switched for its IP
+func (d *dnsCache) lookupURL(hostURL string) string {
+	urlObj, _ := url.Parse(hostURL)
+	hostparts := strings.Split(urlObj.Host, ":")
+	ip, exists := d.dnsMap[hostparts[0]]
+	if !exists {
+		ipList, err := net.LookupIP(hostparts[0])
+		if err != nil {
+			return hostURL
+		}
+		ip = ipList[0].String()
+		d.dnsMap[hostparts[0]] = ip
+	}
+	hostparts[0] = ip
+	urlObj.Host = strings.Join(hostparts, ":")
+	return urlObj.String()
 }
 
 func (d *dnsCache) getURL() string {
@@ -114,12 +118,13 @@ func GetPages() <-chan *Page {
 	}()
 	for i := FetchRoutines; i > 0; i-- {
 		go func() {
-			for {
-				pageUrl := <-fetchChannel
-				page := ParsePage(pageUrl)
+			for pageURL := range fetchChannel {
+				pageIpUrl := urls.lookupURL(pageURL)
+				page := ParsePage(pageIpUrl)
 				if page == nil {
 					continue
 				}
+				page.URL = pageURL
 				for _, link := range page.Links() {
 					urlChannel <- link.URL
 				}
@@ -186,7 +191,7 @@ func ParsePage(pageUrl string) *Page {
 	// log.Println("Tokenizer triggered.")
 	for {
 		if body.ByteCount() > MaxBytes {
-			log.Println("Skipping page larger than " + MaxBytes + ": " + strconv.FormatInt(body.ByteCount(), 10) + " (" + pageUrl + ")")
+			log.Println("Skipping page larger than " + strconv.FormatInt(body.ByteCount(), 10) + ": " + pageUrl)
 			return nil
 		}
 		token := z.Next()
