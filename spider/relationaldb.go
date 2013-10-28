@@ -3,6 +3,7 @@ package spider
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+	// "log"
 	"os"
 	"strings"
 )
@@ -64,6 +65,10 @@ func (rdb *RelationalDB) Clear() {
 }
 
 func (rdb *RelationalDB) InsertPagesAndSetIDs(pages []*Page) {
+	// _, err := rdb.db.Exec("INSERT INTO 'pageInfo' VALUES (NULL, 0, 'www.blue.com', 0, 'Bluebusters', 'mojgoj')")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 	tx, _ := rdb.db.Begin()
 
 	for _, p := range pages {
@@ -74,7 +79,7 @@ func (rdb *RelationalDB) InsertPagesAndSetIDs(pages []*Page) {
 		if p.PageID == -1 {
 			tx.Exec(
 				"INSERT OR IGNORE INTO 'pageInfo' "+
-					"VALUES (default, ?, ?, datetime(?), ?, ?)",
+					"VALUES (NULL, ?, ?, ?, ?, ?)",
 				p.Size, p.URL, p.Modified, p.Title, strings.Join(links, " "))
 			row := tx.QueryRow("SELECT pageID FROM pageInfo WHERE url = ?", p.URL)
 			row.Scan(&p.PageID)
@@ -87,7 +92,7 @@ func (rdb *RelationalDB) InsertWordsAndSetIDs(words []*Word) {
 	tx, _ := rdb.db.Begin()
 	for _, w := range words {
 		if w.WordID == -1 {
-			rdb.db.Exec("INSERT OR IGNORE into words VALUES (?, DEFAULT)", w.Word)
+			rdb.db.Exec("INSERT OR IGNORE into words VALUES (?, NULL)", w.Word)
 			row := tx.QueryRow("SELECT wordID FROM words WHERE word = ?", w.Word)
 			row.Scan(&w.WordID)
 		}
