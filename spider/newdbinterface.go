@@ -30,7 +30,9 @@ func (d *DBM) StorePages(pages []*Page) {
 	//Relational DB
 	relationalDb := NewRelationalDB("sqlite.db")
 	relationalDb.InsertPagesAndSetIDs(pages)
-
+	for _, page := range pages {
+		fmt.Printf("%v\n", page.PageID)
+	}
 	mydb := d.db
 	//init
 	//forwardtable
@@ -88,18 +90,18 @@ func (d *DBM) GetPages() (pages []*Page) {
 	//forward table
 	fowardtable, err := mydb.Array("fowardtable")
 	if err != nil {
-		fmt.Printf("Error:forward table disconnected")
-		panic(err)
+		//fmt.Printf("Error:forward table disconnected")
+		//panic(err)
 	}
 	enum, err := fowardtable.Enumerator(true)
 	if err != io.EOF {
-		fmt.Errorf("Error:fowardtable enum no exist")
-		panic(err)
+		//fmt.Errorf("Error:fowardtable enum no exist")
+		//panic(err)
 	}
 	key, value, err := enum.Next()
 	if err != io.EOF {
-		fmt.Errorf("Error: fowardtable enum contain nothing")
-		panic(err)
+		//fmt.Errorf("Error: fowardtable enum contain nothing")
+		//panic(err)
 	}
 
 	for ; err != io.EOF; key, value, err = enum.Next() {
@@ -160,7 +162,37 @@ func (d *DBM) GetPages() (pages []*Page) {
 	mydb.Close()
 	return pages
 }
+func (d *DBM) GetPages2() (pages []*Page) {
+	relationalDb := NewRelationalDB("sqlite.db")
+	mydb := d.db
 
+	fowardtable, err := mydb.Array("fowardtable")
+	if err != nil {
+		fmt.Printf("Error:forward table disconnected")
+		//panic(err)
+	}
+	enum, err := fowardtable.Enumerator(true)
+	if err != nil {
+		fmt.Printf("Error:fowardtable can't find enum")
+		//panic(err)
+	}
+	key, value, err := enum.Next()
+	if err != io.EOF {
+		fmt.Printf("Error:enum is empty")
+		//panic(err)
+	}
+	//fmt.Printf("%v    %v", key[0], value[0])
+	for ; err != io.EOF; key, value, err = enum.Next() {
+		relationalDb.CompleteThePageInfoOf(pages)
+		fmt.Printf("-----------------------------------------------\n")
+		fmt.Printf("%v    %v\n", key[0], value[0])
+	}
+
+	relationalDb.Close()
+	mydb.Close()
+	pages = append(pages, NewPage())
+	return pages
+}
 func checkDbExist(filename string) bool {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		//fmt.Printf("no such file or directory: %s", filename)
