@@ -6,8 +6,9 @@ import (
 )
 
 func TestInsertPages(t *testing.T) {
+	// pages := []*spider.Page{spider.NewPage()}
 	rdb := spider.NewRelationalDB("sqlite.db")
-	//rdb.InsertPagesAndSetIDs(spider.Get30Pages())
+	rdb.InsertPagesAndSetIDs(spider.Get30Pages())
 	rdb.Clear()
 	t.Fail()
 }
