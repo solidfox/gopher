@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"gopher/spider"
 	//"runtime"
+	"os"
+	"strconv"
 )
 
-func PrintEntireIndex(pages []*) {
+func PrintEntireIndex(pages []*spider.Page) {
 	// from http://stackoverflow.com/questions/1821811/how-to-read-write-from-to-file
 
 	fo, err := os.Create("spider_result.txt")
@@ -20,7 +21,7 @@ func PrintEntireIndex(pages []*) {
 		}
 	}()
 
-	for i, page := range pages{
+	for i, page := range pages {
 
 		fo.WriteString(page.Title + "\n" + page.URL)
 		fo.WriteString("\n")
@@ -29,7 +30,7 @@ func PrintEntireIndex(pages []*) {
 		fo.WriteString("\n")
 
 		for word, wordFreq := range page.words {
-			fo.WriteString( word + ", " + strconv.Itoa(len(wordFreq)) + "; ")
+			fo.WriteString(word + ", " + strconv.Itoa(len(wordFreq)) + "; ")
 		}
 		fo.WriteString("\n")
 
@@ -42,8 +43,6 @@ func PrintEntireIndex(pages []*) {
 	}
 
 }
-
-
 
 func main() {
 	/*	pageChan := spider.GetPages()
@@ -62,7 +61,7 @@ func main() {
 	//table := indexHandler
 	//table.InitialIndexAndMaps()
 	//SetTablesFromDB(table)
-	
+
 	// pages := getPagesFromDb()
-	PrintEntrieIndex(pages)
+	PrintEntrieIndex(spider.Get30Pages())
 }
