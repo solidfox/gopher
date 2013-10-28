@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	// "log"
+	//"fmt"
 	"os"
 	"strings"
 )
@@ -84,6 +85,10 @@ func (rdb *RelationalDB) InsertPagesAndSetIDs(pages []*Page) {
 			row := tx.QueryRow("SELECT pageID FROM pageInfo WHERE url = ?", p.URL)
 			row.Scan(&p.PageID)
 		}
+		// if i%3 == 0 {
+		// 	fmt.Printf("We saved %v pages\n", i)
+		// }
+
 	}
 	tx.Commit()
 }
@@ -92,10 +97,13 @@ func (rdb *RelationalDB) InsertWordsAndSetIDs(words []*Word) {
 	tx, _ := rdb.db.Begin()
 	for _, w := range words {
 		if w.WordID == -1 {
-			rdb.db.Exec("INSERT OR IGNORE into words VALUES (?, NULL)", w.Word)
+			tx.Exec("INSERT OR IGNORE INTO 'words' VALUES (?, NULL)", w.Word)
 			row := tx.QueryRow("SELECT wordID FROM words WHERE word = ?", w.Word)
 			row.Scan(&w.WordID)
 		}
+		// if i%1000 == 0 {
+		// 	fmt.Printf("We saved %v words\n", i)
+		// }
 	}
 	tx.Commit()
 }
