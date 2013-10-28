@@ -130,7 +130,10 @@ func isValidHtmlLink(link string) bool {
 		!strings.HasSuffix(link, ".pdf") &&
 		!strings.HasSuffix(link, ".doc") &&
 		!strings.HasSuffix(link, ".docx") &&
-		!strings.HasSuffix(link, ".ppt")
+		!strings.HasSuffix(link, ".ppt") &&
+		!strings.HasSuffix(link, ".jpg") &&
+		!strings.HasSuffix(link, ".bmp") &&
+		!strings.HasSuffix(link, ".png")
 }
 
 func (p *Page) Words() []*Word {
