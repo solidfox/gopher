@@ -1,4 +1,12 @@
-Written in go gopher's spider is easily run in any go environment by running 
+There are two unix exec.
+The one for calling spider and saving in db is “main”
+Another for getting data from db and print it into txt is “print”
+
+type the following two commands could generate the txt
+$./main
+$./print
+
+Written in go gopher's spider can also be easily run in any go environment by running 
 $ go run main.go
 
 And print the index from db by running
