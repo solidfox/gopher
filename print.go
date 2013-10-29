@@ -45,23 +45,10 @@ func PrintEntireIndex(pages []*spider.Page) {
 }
 
 func main() {
-	/*	pageChan := spider.GetPages()
-		i := 0
-		runtime.GOMAXPROCS(runtime.NumCPU())
+	db := spider.NewDBM("DBM.db")
+	pages2 := db.GetPages2()
 
-		for {
-			fmt.Println("waiting for pages")
-			fmt.Println((<-pageChan).Words())
-			i++
-			fmt.Println(i)
-			fmt.Print("Goroutines: ")
-			fmt.Println(runtime.NumGoroutine())
-		}*/
+	PrintEntireIndex(pages2)
+	db.Close()
 
-	//table := indexHandler
-	//table.InitialIndexAndMaps()
-	//SetTablesFromDB(table)
-
-	// pages := getPagesFromDb()
-	PrintEntireIndex(spider.Get30Pages())
 }
