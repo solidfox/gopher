@@ -4,17 +4,13 @@
 package spider
 
 import (
-	"code.google.com/p/go.net/html"
-	// "fmt"
-	// "io/ioutil"
 	"bytes"
+	"code.google.com/p/go.net/html"
 	"container/list"
-	//"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
-	//"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -29,6 +25,7 @@ const (
 	RootPage         = "http://www.cse.ust.hk/"
 )
 
+// TODO dnsCache does two things. Should be split into a URLKeeper and a DNSCache.
 type dnsCache struct {
 	isParsed map[string]bool
 	dnsMap   map[string]string
@@ -119,8 +116,7 @@ func GetPages() <-chan *Page {
 	for i := FetchRoutines; i > 0; i-- {
 		go func() {
 			for pageURL := range fetchChannel {
-				pageIpUrl := urls.lookupURL(pageURL)
-				page := ParsePage(pageIpUrl)
+				page := parsePage(pageURL, urls)
 				if page == nil {
 					continue
 				}
@@ -158,10 +154,10 @@ func newTimeoutClient(connectTimeout time.Duration, readWriteTimeout time.Durati
 	}
 }
 
-func ParsePage(pageUrl string) *Page {
+func parsePage(pageUrl string, dns *dnsCache) *Page {
 	client := newTimeoutClient(ConnectTimeout*time.Second, ReadWriteTimeout*time.Second)
 	// log.Println(" " + pageUrl + " pre")
-	res, err := client.Get(pageUrl)
+	res, err := client.Get(dns.lookupURL(pageUrl))
 	// log.Println(" " + pageUrl + " post")
 	if err != nil {
 		//log.Println(err)
