@@ -101,8 +101,19 @@ func (d *DBM) StorePages2(pages []*Page) {
 		fmt.Printf("Error:forwardtable disconnected")
 		panic(err)
 	}
+
+	//invertedtable
+	invertedtable, err := mydb.Array("invertedtable")
+	if err != nil {
+		fmt.Printf("Error:invertedtable disconnected")
+		panic(err)
+	}
+
+	//invertedtable map
+	invertedindex := make(map[int]string)
+
 	//fowardtable.Set("value", "key")
-	for h, page := range pages {
+	for _, page := range pages {
 		//forwardtable
 		key := page.PageID
 		words := page.Words()
@@ -118,102 +129,24 @@ func (d *DBM) StorePages2(pages []*Page) {
 			value = value + ";"
 			//fmt.Printf("%v		", value)
 		}
-		//fmt.Printf("\n%v		%v\n", key, len(value))
-		// var test string = ""
-		// for i := 0; i < 10000; i++ {
-		// 	test += "Z"
-		// }
-		// if h != 0 {
-		// 	err := fowardtable.Set(test, key)
-		// 	if err != nil {
-		// 		panic(err)
-		// 	}
-		// }
-		if h != 100 {
-			fowardtable.Set(value, key)
-			// input, _ := fowardtable.Get(key)
-			// fmt.Printf("Input: %v\n", input)
-		}
-
-		//put forwardtable in db
-		// fmt.Printf("%v", value)
-		//fowardtable.Set(value, key)
+		fowardtable.Set(value, key)
+		// input, _ := fowardtable.Get(key)
+		// fmt.Printf("Input: %v\n", input)
 
 		//invertedtable
-		// for _, word := range words {
-		// 	if invertedindex[word.WordID] == "" {
-		// 		invertedindex[word.WordID] += strconv.FormatInt(page.PageID, 10)
-		// 	} else {
-		// 		invertedindex[word.WordID] += "" + strconv.FormatInt(page.PageID, 10)
-		// 	}
-		// }
-
-	}
-	/*var biglistofword []*Word
-	//create the whole list
-	for _, page := range pages {
-		words := page.Words()
 		for _, word := range words {
-			biglistofword = append(biglistofword, word)
+			if invertedindex[word.WordID] == "" {
+				invertedindex[word.WordID] += strconv.FormatInt(page.PageID, 10)
+			} else {
+				invertedindex[word.WordID] += ";" + strconv.FormatInt(page.PageID, 10)
+			}
 		}
+
 	}
-	fmt.Printf("length of biglistofword: %v\n", len(biglistofword))
-
-	relationalDb.InsertWordsAndSetIDs(biglistofword)
-	for _, word := range biglistofword {
-		fmt.Printf("%v:%v %v\n", word.WordID, word.Word, word.TF())
+	for key, value := range invertedindex {
+		invertedtable.Set(value, key)
 	}
-	*/
-	// oneword = append(oneword, NewWord("OKAYLA"))
-	// oneword = append(oneword, NewWord("BYE"))
-	// oneword = append(oneword, NewWord("3per"))
-	// for _, word := range oneword {
-	// 	fmt.Printf("oneword: %v", word.Word)
-	// }
-	// relationalDb.InsertWordsAndSetIDs(oneword)
-	// result := relationalDb.WordIDOf(oneword[0].Word)
-	// result2 := relationalDb.WordIDOf(oneword[1].Word)
-	// result3 := relationalDb.WordIDOf(oneword[1].Word)
-	// fmt.Printf("result= %v,%v,%v\n", result, result2, result3)
-	// for _, word := range biglistofword {
-	// 	fmt.Printf("%v:%v %v\n", word.WordID, word.Word, word.TF())
-	// }
 
-	// for _, page := range pages {
-	// 	words := page.Words()
-	// 	//relationalDb.InsertWordsAndSetIDs(words)
-	// 	fmt.Printf("%v:", page.PageID)
-	// 	for _, word := range words {
-	// 		fmt.Printf("%v ", word.Word)
-	// 	}
-	// 	fmt.Printf("\n")
-	// }
-
-	// 	// for _, word := range words {
-	// 	// 	value += strconv.Itoa(word.WordID) + " " + strconv.Itoa(word.TF())
-	// 	// 	positions := word.Positions()
-	// 	// 	for _, pos := range positions {
-	// 	// 		value += " " + strconv.Itoa(pos)
-	// 	// 	}
-	// 	// 	value = value + ";"
-	// 	// }
-	// 	//put forwardtable in db
-	// 	fowardtable.Set(value, key)
-	// 	fmt.Printf("%v\n%v", value, key)
-	// 	//invertedtable
-	// 	// for _, word := range words {
-	// 	// 	if invertedindex[word.WordID] == "" {
-	// 	// 		invertedindex[word.WordID] += strconv.FormatInt(page.PageID, 10)
-	// 	// 	} else {
-	// 	// 		invertedindex[word.WordID] += "" + strconv.FormatInt(page.PageID, 10)
-	// 	// 	}
-	// 	// }
-	// 	break
-	// }
-	//put invertedtable in db
-	// for wordId, resultstr := range invertedindex {
-	// 	invertedtable.Set(resultstr, wordId)
-	// }
 	relationalDb.Close()
 	//mydb.Close()
 }
@@ -300,6 +233,29 @@ func (d *DBM) getPages() (pages []*Page) {
 func (d *DBM) Close() {
 	mydb := d.db
 	mydb.Close()
+}
+
+func (d *DBM) DisplayInvertedTable() {
+	mydb := d.db
+	invertedtable, err := mydb.Array("invertedtable")
+	if err != nil {
+		fmt.Printf("Error:invertedtable can't find")
+		panic(err)
+	}
+	enum, err := invertedtable.Enumerator(true)
+	if err != nil {
+		panic(err)
+	}
+	key, value, err := enum.Next()
+	if err != io.EOF {
+		//fmt.Printf("Error:enum is empty")
+		//panic(err)
+	}
+	for ; err != io.EOF; key, value, err = enum.Next() {
+		integer := key[0].(int64)
+		str := value[0].(string)
+		fmt.Printf("%v:%v\n", integer, str)
+	}
 }
 
 func (d *DBM) GetPages2() (pages []*Page) {
