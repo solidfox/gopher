@@ -1,0 +1,28 @@
+Server request:
+{
+	query: ""
+}
+
+Server response:
+[
+	{
+		title:
+		url:
+		description:
+		score:
+		modificationDate:
+		size:
+		parents: [{title:, url:}, {title:, url:}...]
+		children: [{title:, url:}, {title:, url:}...]
+	},
+	{
+		title:
+		url:
+		description:
+		score:
+		modificationDate:
+		size:
+		parents: [{title:, url:}, {title:, url:}...]
+		children: [{title:, url:}, {title:, url:}...]
+	}
+]
