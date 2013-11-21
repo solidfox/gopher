@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"github.com/cznic/exp/dbm"
 	"io"
+	"math"
 	"os"
 	"strconv"
 	"strings"
+	//"time"
 )
 
+var TotalDocLen float64 = 0
 var o = &dbm.Options{}
 
 type DBM struct {
@@ -360,4 +363,292 @@ func dbConnect(name string) *dbm.DB {
 		}
 	}
 	return nil
+}
+
+func (d *DBM) GetWordNumber() (score int64) {
+	var wordN string
+	relationalDb := NewRelationalDB("sqlite.db")
+	row := relationalDb.db.QueryRow(
+		"SELECT COUNT(word) FROM words")
+	row.Scan(&wordN)
+	score, _ = strconv.ParseInt(wordN, 10, 64)
+	relationalDb.Close()
+	return score
+}
+func (d *DBM) GetDocumentNumber() (score int) {
+	var docN string
+	relationalDb := NewRelationalDB("sqlite.db")
+	row := relationalDb.db.QueryRow(
+		"SELECT COUNT(PageID) FROM pageInfo")
+	row.Scan(&docN)
+	temp, _ := strconv.ParseInt(docN, 10, 64)
+	score = int(temp)
+	//fmt.Printf("\nWord with id=10: %v\n", relationalDb.WordOf(10))
+	relationalDb.Close()
+	return score
+}
+
+func GetWordNumberByID(wordID int) (score int64) {
+	var wordN string
+	relationalDb := NewRelationalDB("sqlite.db")
+	row := relationalDb.db.QueryRow(
+		"SELECT COUNT(word) FROM words WHERE wordID = ?", wordID)
+	row.Scan(&wordN)
+	score, _ = strconv.ParseInt(wordN, 10, 64)
+	relationalDb.Close()
+	return score
+}
+
+func (d *DBM) Getdf(wordId int) (score int) {
+	mydb := d.db
+	invertedtable, err := mydb.Array("invertedtable")
+	if err != nil {
+		fmt.Printf("Error:inverted table disconnected")
+		//panic(err)
+	}
+
+	temp, _ := invertedtable.Get(wordId)
+	str := temp.(string)
+	statements := strings.Split(str, ";")
+	score = len(statements)
+	// enum, err := invertedtable.Enumerator(true)
+	// if err != nil {
+	// 	fmt.Printf("Error:invertedtable can't find enum")
+	// 	//panic(err)
+	// }
+	//key, value, err := enum.Next()
+	//if err != io.EOF {
+	//}
+
+	// for ; err != io.EOF; key, value, err = enum.Next() {
+
+	// 	if wordId == int(key[0].(int64)) {
+	// 		str := value[0].(string)
+	// 		Statements := strings.Split(str, ";")
+	// 		score = 0
+	// 		for _, _ = range Statements {
+	// 			score++
+	// 		}
+	// 	}
+	// }
+	return score
+}
+
+func (d *DBM) GetDocIdByWordID(wordId int) (docIDs []int64) {
+	mydb := d.db
+	invertedtable, err := mydb.Array("invertedtable")
+	if err != nil {
+		fmt.Printf("Error:inverted table disconnected")
+		//panic(err)
+	}
+
+	temp, _ := invertedtable.Get(wordId)
+	str := temp.(string)
+	statements := strings.Split(str, ";")
+	for _, statement := range statements {
+		//fmt.Printf("%v\n", statement)
+		pageId, _ := strconv.ParseInt(statement, 10, 64)
+		docIDs = append(docIDs, pageId)
+	}
+
+	// enum, err := invertedtable.Enumerator(true)
+	// if err != nil {
+	// 	fmt.Printf("Error:invertedtable can't find enum")
+	// 	//panic(err)
+	// }
+	// //key, value, err := enum.Next()
+	// key, value, err := enum.Next()
+	// if err != io.EOF {
+	// 	//fmt.Printf("Error:enum is empty")
+	// 	//panic(err)
+	// }
+
+	// for ; err != io.EOF; key, value, err = enum.Next() {
+
+	// 	if wordId == int(key[0].(int64)) {
+	// 		str := value[0].(string)
+	// 		Statements := strings.Split(str, ";")
+	// 		//docIDs = 0
+	// 		for _, statement := range Statements {
+	// 			//fmt.Printf("%v\n", statement)
+	// 			pageId, _ := strconv.ParseInt(statement, 10, 64)
+	// 			docIDs = append(docIDs, pageId)
+	// 		}
+	// 	}
+	// }
+	return docIDs
+}
+
+func (d *DBM) GetAllDocId() (docIDs []int64) {
+	mydb := d.db
+	invertedtable, err := mydb.Array("invertedtable")
+	if err != nil {
+		fmt.Printf("Error:inverted table disconnected")
+		//panic(err)
+	}
+
+	enum, err := invertedtable.Enumerator(true)
+	if err != nil {
+		fmt.Printf("Error:invertedtable can't find enum")
+		//panic(err)
+	}
+	//key, value, err := enum.Next()
+	_, value, err := enum.Next()
+	if err != io.EOF {
+		//fmt.Printf("Error:enum is empty")
+		//panic(err)
+	}
+
+	for ; err != io.EOF; _, value, err = enum.Next() {
+
+		//if wordId == int(key[0].(int64)) {
+		str := value[0].(string)
+		Statements := strings.Split(str, ";")
+		//docIDs = 0
+		for _, statement := range Statements {
+			//fmt.Printf("%v\n", statement)
+			pageId, _ := strconv.ParseInt(statement, 10, 64)
+			docIDs = append(docIDs, pageId)
+		}
+		//}
+	}
+	return docIDs
+}
+
+func (d *DBM) GetTf(wordId int, docId int64) (tf int) {
+	mydb := d.db
+	fowardtable, err := mydb.Array("fowardtable")
+	if err != nil {
+		fmt.Printf("Error:forward table disconnected")
+		//panic(err)
+	}
+
+	temp, _ := fowardtable.Get(docId)
+	longstr := temp.(string)
+	statements := strings.Split(longstr, ";")
+	for _, statement := range statements {
+		tokens := strings.Fields(statement)
+
+		if len(tokens) != 0 {
+			a, _ := strconv.ParseInt(tokens[0], 10, 64)
+			wordId2 := int(a)
+
+			if wordId == wordId2 {
+				temp, _ := strconv.ParseInt(tokens[1], 10, 64)
+				//fmt.Printf("%v\n", temp)
+				tf = int(temp)
+			}
+		}
+	}
+
+	return tf
+}
+
+func (d *DBM) docLength(docId int64) (length int) {
+	length = 0
+	mydb := d.db
+	fowardtable, err := mydb.Array("fowardtable")
+	if err != nil {
+		fmt.Printf("Error:forward table disconnected")
+		//panic(err)
+	}
+
+	temp, _ := fowardtable.Get(docId)
+	longstr := temp.(string)
+	statements := strings.Split(longstr, ";")
+	for _, statement := range statements {
+		tokens := strings.Fields(statement)
+
+		if len(tokens) != 0 {
+			temp, _ := strconv.ParseInt(tokens[1], 10, 64)
+			//fmt.Printf("%v\n", temp)
+			length += int(temp)
+		}
+	}
+	// for ; err != io.EOF; key, value, err = enum.Next() {
+	// 	docId2 := key[0].(int64)
+	// 	if docId == docId2 {
+	// 		longstr := value[0].(string)
+	// 		statements := strings.Split(longstr, ";")
+	// 		for _, statement := range statements {
+	// 			tokens := strings.Fields(statement)
+
+	// 			if len(tokens) != 0 {
+	// 				temp, _ := strconv.ParseInt(tokens[1], 10, 64)
+	// 				//fmt.Printf("%v\n", temp)
+	// 				length += int(temp)
+	// 			}
+	// 		}
+	// 	}
+	// }
+	return length
+}
+
+func (d *DBM) aveDocLength() (length float64) {
+	N := float64(d.GetDocumentNumber())
+	if TotalDocLen == 0.0 {
+		length = 0
+		docIds := d.GetAllDocId()
+		for _, docId := range docIds {
+			length += float64(d.docLength(docId))
+		}
+		TotalDocLen = length
+	} else {
+		length = TotalDocLen
+	}
+
+	return (length / N)
+}
+
+func (d *DBM) GetTfidf(wordId int, docId int64) (weight float64) {
+	N := float64(d.GetDocumentNumber())
+	df := float64(d.Getdf(wordId))
+	k1 := 2.0
+	b := 0.75
+	firstTerm := (math.Log((N - df + 0.5) / (df + 0.5)))
+	secondTerm := ((k1 + 1) * float64(d.GetTf(wordId, docId))) / ((k1*(1-b) + b*float64(d.docLength(docId))/d.aveDocLength()) + float64(d.GetTf(wordId, docId)))
+	return firstTerm * secondTerm
+}
+
+func (d *DBM) CosSim(docId int64, query []string) float64 {
+	var dqSum float64 = 0
+	var dLen float64 = 0
+	var qLen float64 = 0
+	qLen = float64(len(query))
+	relationalDb := NewRelationalDB("sqlite.db")
+
+	mydb := d.db
+	fowardtable, err := mydb.Array("fowardtable")
+	if err != nil {
+		fmt.Printf("Error:forward table disconnected")
+		//panic(err)
+	}
+
+	temp, _ := fowardtable.Get(docId)
+	longstr := temp.(string)
+	statements := strings.Split(longstr, ";")
+	for _, statement := range statements {
+		tokens := strings.Fields(statement)
+
+		if len(tokens) != 0 {
+			temp, _ := strconv.ParseInt(tokens[1], 10, 64)
+			wordId, _ := strconv.ParseInt(tokens[0], 10, 64)
+			//fmt.Printf("%v\n", temp)
+			dLen += (float64(temp)) * (float64(temp))
+			for _, word := range query {
+				ID := relationalDb.WordIDOf(word)
+				if ID == wordId {
+					dqSum += float64(temp) * 1.0
+				}
+			}
+		}
+	}
+
+	dLen = math.Sqrt(dLen)
+	qLen = math.Sqrt(qLen)
+
+	relationalDb.Close()
+	//mydb.Close()
+	//fmt.Printf("%v", ID)
+	return dqSum / (dLen * qLen)
 }
