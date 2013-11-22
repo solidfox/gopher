@@ -317,7 +317,7 @@ func (d *DBM) GetPages2() (pages []*Page) {
 							pos = append(pos, temp)
 						}
 					}
-
+					word.WordID = wordId
 					word.Word = relationalDb.WordOf(wordId)
 					word.positions = pos
 					words = append(words, word)
@@ -400,37 +400,21 @@ func GetWordNumberByID(wordID int) (score int64) {
 }
 
 func (d *DBM) Getdf(wordId int) (score int) {
+	score = 0
 	mydb := d.db
 	invertedtable, err := mydb.Array("invertedtable")
 	if err != nil {
 		fmt.Printf("Error:inverted table disconnected")
 		//panic(err)
 	}
-
+	//fmt.Printf("%v\n", wordId)
 	temp, _ := invertedtable.Get(wordId)
-	str := temp.(string)
-	statements := strings.Split(str, ";")
-	score = len(statements)
-	// enum, err := invertedtable.Enumerator(true)
-	// if err != nil {
-	// 	fmt.Printf("Error:invertedtable can't find enum")
-	// 	//panic(err)
-	// }
-	//key, value, err := enum.Next()
-	//if err != io.EOF {
-	//}
+	if temp != nil {
+		str := temp.(string)
+		statements := strings.Split(str, ";")
+		score = len(statements)
+	}
 
-	// for ; err != io.EOF; key, value, err = enum.Next() {
-
-	// 	if wordId == int(key[0].(int64)) {
-	// 		str := value[0].(string)
-	// 		Statements := strings.Split(str, ";")
-	// 		score = 0
-	// 		for _, _ = range Statements {
-	// 			score++
-	// 		}
-	// 	}
-	// }
 	return score
 }
 
@@ -443,12 +427,14 @@ func (d *DBM) GetDocIdByWordID(wordId int) (docIDs []int64) {
 	}
 
 	temp, _ := invertedtable.Get(wordId)
-	str := temp.(string)
-	statements := strings.Split(str, ";")
-	for _, statement := range statements {
-		//fmt.Printf("%v\n", statement)
-		pageId, _ := strconv.ParseInt(statement, 10, 64)
-		docIDs = append(docIDs, pageId)
+	if temp != nil {
+		str := temp.(string)
+		statements := strings.Split(str, ";")
+		for _, statement := range statements {
+			//fmt.Printf("%v\n", statement)
+			pageId, _ := strconv.ParseInt(statement, 10, 64)
+			docIDs = append(docIDs, pageId)
+		}
 	}
 
 	// enum, err := invertedtable.Enumerator(true)

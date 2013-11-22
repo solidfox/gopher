@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"gopher/ranker"
 	"gopher/spider"
 	"time"
 )
@@ -23,7 +24,21 @@ func main() {
 		fmt.Printf("pageId: %v	TF: %v	TFIDF: %v", pageId, int(db.GetTf(10, pageId)), db.GetTfidf(10, pageId))
 		fmt.Printf("	CosSim: %v\n", db.CosSim(pageId, words))
 	}
+
+	//ranker.PrintHiHi()
+
+	pages2 := db.GetPages2()
+	var testingPage spider.Page
+	for _, page := range pages2 {
+		testingPage = *page
+		break
+	}
+	// for _, word := range testingPage.Words() {
+	// 	fmt.Printf("%v", word)
+	// }
+	db.Close()
+	ranker.SearchingResult(testingPage, ranker.TFIDF)
 	elapsed := time.Since(start)
 	fmt.Printf("Time spent: %v\n", elapsed)
-	db.Close()
+
 }
