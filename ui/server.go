@@ -6,10 +6,17 @@
 package main
 
 import (
+	"encoding/json"
 	"gopher/search"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
+
+type message struct {
+	Query string
+}
 
 func init() {
 	log.SetPrefix("Gopher server: ")
@@ -37,11 +44,23 @@ func ServeSearchEngine(w http.ResponseWriter, r *http.Request) {
 	log.Println("Serving " + url)
 
 	switch url {
-	case "/search":
-		query := r.FormValue("query")
-		search.RespondToQuery(w, query)
+	case "/api":
+		respondToApiCall(w, r.Body)
 	default:
 		http.ServeFile(w, r, "."+url)
 	}
 
+}
+
+func respondToApiCall(w io.Writer, r io.ReadCloser) {
+	var mess *message
+
+	indata, _ := ioutil.ReadAll(r)
+
+	err := json.Unmarshal(indata, &mess)
+	if err != nil {
+		log.Println("error:", err)
+	}
+
+	search.RespondToQuery(w, mess.Query)
 }
