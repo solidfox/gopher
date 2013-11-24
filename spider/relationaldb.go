@@ -3,10 +3,26 @@ package spider
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	// "log"
+	"log"
 	//"fmt"
 	"os"
 	"strings"
+)
+
+const (
+	CreatePageInfoTableStmt = `
+	CREATE TABLE pageInfo (
+		pageID 		INTEGER PRIMARY KEY AUTOINCREMENT,
+		size 			INTEGER,
+		url 			TEXT UNIQUE,
+		modifiedDate 	DATETIME,
+		title 			TEXT,
+		childLinks 	TEXT
+	)`
+	GetPageIdStmt = `
+	SELECT pageID FROM pageInfo WHERE url = ?`
+	InsertLinkStmt = `
+	INSERT OR IGNORE INTO links VALUES (?, ?)`
 )
 
 /*
@@ -25,7 +41,8 @@ CREATE TABLE 'words' (
 */
 
 type RelationalDB struct {
-	db *sql.DB
+	db        *sql.DB
+	pageCache *Page
 }
 
 func NewRelationalDB(dbpath string) *RelationalDB {
@@ -38,24 +55,23 @@ func NewRelationalDB(dbpath string) *RelationalDB {
 	}
 
 	if dbDidNotExist {
-		db.Exec(
-			"CREATE TABLE pageInfo (" +
-				"pageID 		INTEGER PRIMARY KEY AUTOINCREMENT," +
-				"size 			INTEGER," +
-				"url 			TEXT UNIQUE," +
-				"modifiedDate 	DATETIME," +
-				"title 			TEXT," +
-				"childLinks 	TEXT" +
-				")")
+		db.Exec(CreatePageInfoTableStmt)
 		db.Exec(
 			"CREATE TABLE words (" +
 				"word		TEXT UNIQUE," +
 				"wordID	INTEGER PRIMARY KEY AUTOINCREMENT" +
-				")")
+				")",
+		)
+		db.Exec(
+			"CREATE TABLE links (" +
+				"parent		INTEGER REFERENCES pageInfo(pageID)," +
+				"child		INTEGER REFERENCES pageInfo(pageID)," +
+				"UNIQUE(parent, child))",
+		)
 	}
 
 	return &RelationalDB{
-		db,
+		db: db,
 	}
 }
 
@@ -65,32 +81,75 @@ func (rdb *RelationalDB) Clear() {
 	rdb.db.Exec("DELETE from words WHERE wordID >= 0")
 }
 
+// func (rdb *RelationalDB) InsertLink(parent string, child string) {
+// 	tx, _ := rdb.db.Begin()
+// 	defer tx.Commit()
+// 	insertLinkStmt := tx.Prepare(InsertLinkStatement)
+
+// 	insertLink(stmt, parent, child)
+// }
+
+func (rdb *RelationalDB) insertLink(
+	insertLinkStmt *sql.Stmt,
+	getPageIDStmt *sql.Stmt,
+	insertPageStmt *sql.Stmt,
+	parent string,
+	child string,
+) {
+	var parentID int64
+	var childID int64
+	if rdb.pageCache.URL == parent {
+		parentID = rdb.pageCache.PageID
+	} else {
+		row := getPageIDStmt.QueryRow(parent)
+		err := row.Scan(&parentID)
+		if err == sql.ErrNoRows {
+			insertPageStmt.Exec(nil, parent, nil, nil)
+		}
+	}
+	insertPageStmt.Exec(nil, child, nil, nil)
+	row := getPageIDStmt.QueryRow(child)
+	err := row.Scan(&childID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	insertLinkStmt.Exec(parentID, childID)
+}
+
 func (rdb *RelationalDB) InsertPagesAndSetIDs(pages []*Page) {
-	// _, err := rdb.db.Exec("INSERT INTO 'pageInfo' VALUES (NULL, 0, 'www.blue.com', 0, 'Bluebusters', 'mojgoj')")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 	tx, _ := rdb.db.Begin()
+	defer tx.Commit()
+	updatePage, _ := tx.Prepare(
+		"UPDATE 'pageInfo' SET " +
+			"size = ?" +
+			"modifiedDate = ?" +
+			"title = ?" +
+			"WHERE url = ?")
+	insertNewPage, _ := tx.Prepare(
+		"INSERT OR IGNORE INTO 'pageInfo' " +
+			"VALUES (NULL, ?, ?, ?, ?, ?)")
+	getPageId, _ := tx.Prepare(GetPageIdStmt)
+	insertLink, _ := tx.Prepare(InsertLinkStmt)
 
 	for _, p := range pages {
-		links := make([]string, len(p.Links()))
-		for i, link := range p.Links() {
-			links[i] = link.URL
+		rdb.pageCache = p
+		res, err := updatePage.Exec(p.Size, p.Modified, p.Title, p.URL)
+		if err != nil {
+			log.Fatal(err)
 		}
-		if p.PageID == -1 {
-			tx.Exec(
-				"INSERT OR IGNORE INTO 'pageInfo' "+
-					"VALUES (NULL, ?, ?, ?, ?, ?)",
-				p.Size, p.URL, p.Modified, p.Title, strings.Join(links, " "))
-			row := tx.QueryRow("SELECT pageID FROM pageInfo WHERE url = ?", p.URL)
-			row.Scan(&p.PageID)
+		rowsAffected, err := res.RowsAffected()
+		if err != nil {
+			log.Fatal(err)
 		}
-		// if i%3 == 0 {
-		// 	fmt.Printf("We saved %v pages\n", i)
-		// }
-
+		if rowsAffected == 0 {
+			insertNewPage.Exec(p.Size, p.URL, p.Modified, p.Title)
+		}
+		row := getPageId.QueryRow(p.URL)
+		row.Scan(&p.PageID)
+		for _, link := range p.Links() {
+			rdb.insertLink(insertLink, getPageId, insertNewPage, p.URL, link.URL)
+		}
 	}
-	tx.Commit()
 }
 
 func (rdb *RelationalDB) InsertWordsAndSetIDs(words []*Word) {
