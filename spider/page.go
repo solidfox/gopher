@@ -15,14 +15,8 @@ import (
 
 const (
 	DefaultPositionsLength = 10
-	DefaultLinksLength
+	DefaultLinksLength     = 10
 )
-
-type Word struct {
-	WordID    int
-	Word      string
-	positions []int
-}
 
 type positionList []int
 type Link struct {
@@ -149,31 +143,4 @@ func (p *Page) Words() []*Word {
 
 func (p *Page) Links() []Link {
 	return p.links
-}
-
-func NewWord(word string) *Word {
-	return &Word{
-		WordID:    -1,
-		Word:      word,
-		positions: nil,
-	}
-}
-
-func (w *Word) AddPositions(positions []int) {
-	if len(w.positions) == 0 {
-		w.positions = positions
-	} else {
-		for _, pos := range positions {
-			w.positions = append(w.positions, pos)
-		}
-		//w.positions = append(w.positions, positions)
-	}
-}
-
-func (w *Word) Positions() []int {
-	return w.positions
-}
-
-func (w *Word) TF() int {
-	return len(w.positions)
 }
