@@ -155,7 +155,7 @@ func NewWord(word string) *Word {
 	return &Word{
 		WordID:    -1,
 		Word:      word,
-		positions: make([]int, 1, DefaultPositionsLength),
+		positions: nil,
 	}
 }
 

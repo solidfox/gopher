@@ -3,12 +3,13 @@ package spider
 import (
 	"fmt"
 	"github.com/cznic/exp/dbm"
+	//"gopher/ranker"
 	"io"
 	"math"
 	"os"
 	"strconv"
 	"strings"
-	//"time"
+	"time"
 )
 
 var TotalDocLen float64 = 0
@@ -238,6 +239,31 @@ func (d *DBM) Close() {
 	mydb.Close()
 }
 
+func (d *DBM) GetInvertedIndex() (result map[int]string) {
+	result = make(map[int]string)
+	mydb := d.db
+	invertedtable, err := mydb.Array("invertedtable")
+	if err != nil {
+		fmt.Printf("Error:invertedtable can't find")
+		panic(err)
+	}
+	enum, err := invertedtable.Enumerator(true)
+	if err != nil {
+		panic(err)
+	}
+	key, value, err := enum.Next()
+	if err != io.EOF {
+		//fmt.Printf("Error:enum is empty")
+		//panic(err)
+	}
+	for ; err != io.EOF; key, value, err = enum.Next() {
+		integer := int(key[0].(int64))
+		str := value[0].(string)
+		result[integer] = str
+	}
+	return
+}
+
 func (d *DBM) DisplayInvertedTable() {
 	mydb := d.db
 	invertedtable, err := mydb.Array("invertedtable")
@@ -437,31 +463,6 @@ func (d *DBM) GetDocIdByWordID(wordId int) (docIDs []int64) {
 		}
 	}
 
-	// enum, err := invertedtable.Enumerator(true)
-	// if err != nil {
-	// 	fmt.Printf("Error:invertedtable can't find enum")
-	// 	//panic(err)
-	// }
-	// //key, value, err := enum.Next()
-	// key, value, err := enum.Next()
-	// if err != io.EOF {
-	// 	//fmt.Printf("Error:enum is empty")
-	// 	//panic(err)
-	// }
-
-	// for ; err != io.EOF; key, value, err = enum.Next() {
-
-	// 	if wordId == int(key[0].(int64)) {
-	// 		str := value[0].(string)
-	// 		Statements := strings.Split(str, ";")
-	// 		//docIDs = 0
-	// 		for _, statement := range Statements {
-	// 			//fmt.Printf("%v\n", statement)
-	// 			pageId, _ := strconv.ParseInt(statement, 10, 64)
-	// 			docIDs = append(docIDs, pageId)
-	// 		}
-	// 	}
-	// }
 	return docIDs
 }
 
@@ -596,7 +597,53 @@ func (d *DBM) GetTfidf(wordId int, docId int64) (weight float64) {
 	return firstTerm * secondTerm
 }
 
-func (d *DBM) CosSim(docId int64, query []string) float64 {
+// func (d *DBM) GetTfidfPhased(words []string, docId int64) (weight float64) {
+// 	N := float64(d.GetDocumentNumber())
+// 	var wordIDs []int
+// 	relationalDb := NewRelationalDB("sqlite.db")
+// 	for _, word := range words {
+// 		wordIDs = append(wordIDs, relationalDb.WordIDOf(word))
+// 	}
+// 	relationalDb.Close()
+// 	df := float64(d.GetdfPhased(wordIDs))
+// 	k1 := 2.0
+// 	b := 0.75
+// 	firstTerm := (math.Log((N - df + 0.5) / (df + 0.5)))
+// 	secondTerm := ((k1 + 1) * float64(d.GetTf(wordId, docId))) / ((k1*(1-b) + b*float64(d.docLength(docId))/d.aveDocLength()) + float64(d.GetTf(wordId, docId)))
+// 	return firstTerm * secondTerm
+// }
+
+// func (d *DBM) GetdfPhased(wordIDs []int) (score int) {
+// 	score = 0
+// 	mydb := d.db
+// 	docIds := getDocIDsbyWords(wordIDs)
+// 	docIds
+
+// 	return score
+// }
+
+// func getDocIDsbyWords(wordIDs []int) (DocIDs []int64) {
+// 	db := NewDBM("DBM.db")
+// 	for _, word := range words {
+// 		docIDs := db.GetDocIdByWordID(wordIDs)
+// 		for _, docID := range docIDs {
+// 			if len(DocIDs) == 0 {
+// 				DocIDs = append(DocIDs, docID)
+// 			} else {
+// 				if isExist(DocIDs, docID) == false {
+// 					DocIDs = append(DocIDs, docID)
+// 				}
+// 			}
+// 		}
+// 	}
+// 	db.Close()
+// 	return
+// }
+
+// This method is super slow
+// So, i make it private to prevent misuse
+func (d *DBM) cosSim(docId int64, query []string) float64 {
+
 	var dqSum float64 = 0
 	var dLen float64 = 0
 	var qLen float64 = 0
@@ -613,6 +660,9 @@ func (d *DBM) CosSim(docId int64, query []string) float64 {
 	temp, _ := fowardtable.Get(docId)
 	longstr := temp.(string)
 	statements := strings.Split(longstr, ";")
+	start := time.Now()
+	fmt.Printf("Number of statements: %v\n", len(statements))
+	fmt.Printf("Number of query: %v\n", len(query))
 	for _, statement := range statements {
 		tokens := strings.Fields(statement)
 
@@ -629,12 +679,14 @@ func (d *DBM) CosSim(docId int64, query []string) float64 {
 			}
 		}
 	}
-
+	elapsed := time.Since(start)
+	fmt.Printf("Time spent in func CosSim For loop: %v\n", elapsed)
 	dLen = math.Sqrt(dLen)
 	qLen = math.Sqrt(qLen)
 
 	relationalDb.Close()
 	//mydb.Close()
 	//fmt.Printf("%v", ID)
+
 	return dqSum / (dLen * qLen)
 }

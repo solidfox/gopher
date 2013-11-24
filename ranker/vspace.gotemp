@@ -1,0 +1,252 @@
+package ranker
+
+import (
+	"fmt"
+	"gopher/spider"
+	"math"
+	"strings"
+	"time"
+)
+
+const (
+	TFIDF = iota //=0
+	Cos          //1
+	//add here
+)
+
+func Tfidf(documentID int64, wordID int) (score float64) {
+	db := spider.NewDBM(spider.DBMname)
+	score = db.GetTfidf(wordID, documentID)
+	db.Close()
+	return
+}
+
+// func CosSim(docId int64, query []string) (score float64) {
+// 	db := spider.NewDBM(spider.DBMname)
+// 	score = db.CosSim(docId, query)
+// 	db.Close()
+// 	return
+// }
+
+func QueryProcess(query []string) (docment spider.Page) {
+	return
+}
+
+//TODO: TFIDF(word string,page spider.page)
+//TODO: TFIDF(phaseTerms []string,page spider.page)
+
+func SearchingResult(query spider.Page, option int) (resultDocIDs []int64) {
+	//query.word has no wordID
+	start := time.Now()
+	words := query.Words()
+	var phases []string
+	//words contains phase,
+	words = words[:10]
+	searchWords := words
+	relationalDb := spider.NewRelationalDB("sqlite.db")
+	// Add phase, tokenize it for searching(with word and wordID)
+	for index, word := range searchWords {
+		if strings.Contains(word.Word, " ") {
+			phase := word.Word
+			phases = append(phases, phase)
+			//remove phase
+			searchWords = append(searchWords[:index], searchWords[index+1:]...)
+			//remove phase
+			words = append(words[:index], words[index+1:]...)
+			singleWords := strings.Fields(phase)
+			for _, singleWord := range singleWords {
+				newWord := spider.NewWord(singleWord)
+				//newWord.WordID = int(relationalDb.WordIDOf(singleWord))
+				searchWords = append(searchWords, newWord)
+			}
+		}
+	}
+	//Add wordID to all word
+	for _, searchword := range searchWords {
+		searchword.WordID = int(relationalDb.WordIDOf(searchword.Word))
+	}
+	for _, word := range words {
+		word.WordID = int(relationalDb.WordIDOf(word.Word))
+	}
+
+	relationalDb.Close()
+	docIDs := getDocIDsbyWords(searchWords)
+	docResults := make([]float64, len(docIDs))
+	switch option {
+	default:
+		fmt.Errorf("Search with invalid option")
+	case TFIDF:
+
+		// for _, ids := range words {
+		// 	fmt.Printf("\n%v", ids.WordID)
+		// }
+
+		fmt.Printf("DocIDs length: %v", len(docIDs))
+		fmt.Printf("Words length: %v", len(words))
+		fmt.Printf("SearchWords length: %v", len(searchWords))
+		//var docResults [len(docIDs)]float64
+		db := spider.NewDBM(spider.DBMname)
+		for index, documentID := range docIDs {
+			docResults[index] = 0
+			//non-phase part
+			for _, word := range words {
+				wordID := word.WordID
+				docResults[index] += db.GetTfidf(wordID, documentID) //Tfidf(documentID, wordID)
+			}
+			//phase part
+			for _, phase := range phases {
+				//var phaseTerm []spider.Word
+				phaseTerms := strings.Fields(phase)
+				// for _, phaseTerm := range phaseTerms{
+				// 	phaseTerm
+				// }
+				docResults[index] += db.GetTfidfPhased(phaseTerms, documentID)
+			}
+
+			//fmt.Printf("%v", docResults)
+		}
+		db.Close()
+
+	case Cos:
+		var strArr []string
+		for _, word := range words {
+			wordContent := word.Word
+			strArr = append(strArr, wordContent)
+		}
+		db := spider.NewDBM(spider.DBMname)
+		fmt.Printf("DocIDs length: %v", len(docIDs))
+
+		//Old method not precompute page out
+		// for index, searchDocID := range docIDs {
+		// 	docResults[index] = db.CosSim(searchDocID, strArr) //CosSim(searchDocID, strArr)
+		// }
+
+		//New method by getting pages first
+		pages := db.GetPages2()
+		db.Close()
+		for index, searchDocID := range docIDs {
+			docResults[index] = CosSim(pages, searchDocID, strArr) //CosSim(searchDocID, strArr)
+		}
+	}
+	elapsed := time.Since(start)
+	fmt.Printf("Time spent in func Search Result: %v\n", elapsed)
+
+	maxNumberOfPageReturn := 30
+	// words := page.Words()
+	for i := 0; i < maxNumberOfPageReturn; i++ {
+		//make sure it is not a empty array
+		if len(docResults) > 0 {
+			MaxScore := docResults[0]
+			MaxIndex := 0
+			//find max TF word
+			for index, docResult := range docResults {
+				if docResult > MaxScore {
+					MaxIndex = index
+					MaxScore = docResult
+				}
+			}
+			//put into result
+			resultDocIDs = append(resultDocIDs, docIDs[MaxIndex])
+			//remove max term from the list
+			docResults = append(docResults[:MaxIndex], docResults[MaxIndex+1:]...)
+			docIDs = append(docIDs[:MaxIndex], docIDs[MaxIndex+1:]...)
+		}
+	}
+
+	return
+}
+
+func removeArrayItemWithIndex(arr []float64, index int) []float64 {
+	arr = append(arr[:index], arr[index+1:]...)
+	return arr
+}
+
+func PrintHiHi() {
+	fmt.Printf("HiHi")
+}
+
+// we need input spider.word with corr wordID
+func getDocIDsbyWords(words []*spider.Word) (DocIDs []int64) {
+	db := spider.NewDBM("DBM.db")
+	for _, word := range words {
+		docIDs := db.GetDocIdByWordID(word.WordID)
+		for _, docID := range docIDs {
+			if len(DocIDs) == 0 {
+				DocIDs = append(DocIDs, docID)
+			} else {
+				if isExist(DocIDs, docID) == false {
+					DocIDs = append(DocIDs, docID)
+				}
+			}
+		}
+	}
+	db.Close()
+	return
+}
+
+func isExist(input []int64, newItem int64) (result bool) {
+	for _, item := range input {
+		if item == newItem {
+			return true
+		}
+	}
+	return false
+}
+
+func CosSim(pages []*spider.Page, docId int64, query []string) float64 {
+	var dqSum float64 = 0
+	var dLen float64 = 0
+	var qLen float64 = 0
+
+	qLen = float64(len(query))
+	for _, page := range pages {
+		if page.PageID == docId {
+			for _, word := range page.Words() {
+				dLen += (float64(word.TF())) * (float64(word.TF()))
+				for _, queryword := range query {
+					if word.Word == queryword {
+						dqSum += float64(word.TF()) * 1.0
+					}
+				}
+			}
+		}
+	}
+
+	dLen = math.Sqrt(dLen)
+	qLen = math.Sqrt(qLen)
+
+	//relationalDb.Close()
+
+	//mydb.Close()
+	//fmt.Printf("%v", ID)
+
+	return dqSum / (dLen * qLen)
+}
+
+func GetMostFreqWord(page spider.Page, number int) (freqWords []spider.Word) {
+	words := page.Words()
+	for i := 0; i < number; i++ {
+		//make sure it is not a empty array
+		if len(words) > 0 {
+			MaxTermFreq := words[0].TF()
+			MaxIndex := 0
+			//find max TF word
+			for index, word := range words {
+				if word.TF() > MaxTermFreq {
+					MaxIndex = index
+					MaxTermFreq = word.TF()
+				}
+			}
+			//put into result
+			freqWords = append(freqWords, *words[MaxIndex])
+			//remove max term from the list
+			words = append(words[:MaxIndex], words[MaxIndex+1:]...)
+		}
+	}
+
+	return
+}
+
+func getMax() {
+
+}
