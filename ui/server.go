@@ -47,7 +47,7 @@ func ServeSearchEngine(w http.ResponseWriter, r *http.Request) {
 	case "/api":
 		respondToApiCall(w, r.Body)
 	default:
-		http.ServeFile(w, r, "."+url)
+		http.ServeFile(w, r, "searchengineUI"+url)
 	}
 
 }
