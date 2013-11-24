@@ -12,69 +12,74 @@
 
 
 	<script src="js/vendor/custom.modernizr.js"></script>
+<!-- 	<link rel="stylesheet" type="text/css" href="transition/css/default.css" />
+	<link rel="stylesheet" type="text/css" href="transition/css/multilevelmenu.css" />
+	<link rel="stylesheet" type="text/css" href="transition/css/component.css" />
+	<link rel="stylesheet" type="text/css" href="transition/css/animations.css" />
+-->
 
 </head>
 <body>
 
 
-<nav class="top-bar" data-topbar>
-  <ul class="title-area">
-    <li class="name">
-      <h1><a href="#">My Site</a></h1>
-    </li>
-  </ul>
+	<nav class="top-bar" data-topbar>
+		<ul class="title-area">
+			<li class="name">
+				<h1><a id='backToFront' href="#">Home</a></h1>
+			</li>
+		</ul>
 
-  <section class="top-bar-section">
-    <!-- Right Nav Section -->
-    <ul class="right">
-      <li class="active"><a href="#">Right Nav Button Active</a></li>
-      <li class="has-dropdown">
-        <a href="#">Right Button with Dropdown</a>
-        <ul class="dropdown">
-          <li><a href="#">First link in dropdown</a></li>
-        </ul>
-      </li>
+		<section class="top-bar-section">
+			<!-- Right Nav Section -->
+			<ul class="right">
+				<!-- <li class="active"><a href="#">Right Nav Button Active</a></li> -->
+				<li class="has-dropdown">
+					<a href="#">Other Features</a>
+					<ul class="dropdown">
+						<li><a id='toQueryHistory' href="#">Query History</a></li>
+						<li><a id='toIndex' href="#">Our Index</a></li>
 
-
-    </ul>
-
+					</ul>
+				</li>
 
 
-    <!-- Left Nav Section -->
-    <ul class="left">
-
-    	<li class="has-form">
-  <div class="row collapse">
-    <div class="large-8 small-9 columns">
-      <input type="text" placeholder="Find Stuff">
-    </div>
-    <div class="large-4 small-3 columns">
-      <a href="#" class="alert button expand">Search</a>
-    </div>
-  </div>
-</li>
-
-      <li><a href="#">Left Nav Button</a></li>
-    </ul>
-  </section>
-</nav>
+			</ul>
 
 
-	<div class="row">
+
+			<!-- Left Nav Section -->
+			<ul class="left">
+
+				<li class="has-form">
+					<div class="row collapse">
+						<div class="large-8 small-9 columns">
+							<input type="text" placeholder="Find Stuff">
+						</div>
+						<div class="large-4 small-3 columns">
+							<a href="#" id='barSearchButton' class="alert button expand">Search</a>
+						</div>
+					</div>
+				</li>
+
+				<!-- <li><a href="#">Left Nav Button</a></li> -->
+			</ul>
+		</section>
+	</nav>
+
+
+
+
+
+
+
+	<div id='front' class="row">
+
 		<div class="twelve columns">
 			<h2>Welcome to Gopher</h2>
 			<p>We are a small group of students from <strong> HKUST </strong> </p>
 			<p>Please enjoy! </p>
 			<hr />
 		</div>
-	</div>
-
-
-
-
-
-	<div class="row">
-
 
 
 		<form>
@@ -86,7 +91,7 @@
 
 
 				<div class="four columns">
-					<a href="#" id='search' class="large secondary button">Search</a>
+					<a href="#" id='frontSearchButton' class="large secondary button">Search</a>
 
 
 				</div>
@@ -94,114 +99,206 @@
 <!-- 				<div class="four columns">
 					<a href="#" class="large secondary button">Lucky Draw!</a>
 				</div>
- -->
-			</fieldset>
+			-->
+		</fieldset>
 
-		</form>
+	</form>
 
-		<h3>Results</h3>
+</div>
 
-		<div class="panel" id='resultPanel'>
+<div class='row' id='resultpage'>
+	<h3>Results</h3>
 
-
-		</div>
-
-
-			<div class='row'>
-				<ul data-orbit>
-					<li data-orbit-slide="headline-1">
-								<div id='fancyResultPanel'>
-
-						<br>
-						<h2>Headline 1</h2>
-						<h3>Subheadline</h3>
-						<p>Pellentesque habitant morbi tristique senectus.</p>
-								</div>
-<!-- </div> -->
-					</li>
-					<li data-orbit-slide="headline-2">
-						<h2>Headline 2</h2>
-						<h3>Subheadline</h3>
-						<p>Pellentesque habitant morbi tristique senectus.</p>
-					</li>
-					<li data-orbit-slide="headline-3">
-						<h2>Headline 3</h2>
-						<h3>Subheadline</h3>
-						<p>Pellentesque habitant morbi tristique senectus.</p>
-					</li>
-				</ul>
-
-			</div>
+	<div class="panel" id='resultPanel'>
 
 
 	</div>
+</div>
 
 
-	<br>
+<div class='row' id='queryhistorypage'>
+	<h3>Results</h3>
+
+	<div class="panel" id='queryhistoryPanel'>
 
 
+	</div>
+</div>
+
+<div class='row' id='indexpage'>
+	<h3>Index</h3>
+
+	<div class="panel" id='indexPanel'>
 
 
+	</div>
+</div>
 
+<!-- 
+<div class='row'>
+	<ul data-orbit>
+		<li data-orbit-slide="headline-1">
+			<div id='fancyResultPanel'>
 
+				<br>
+				<h2>Headline 1</h2>
+				<h3>Subheadline</h3>
+				<p>Pellentesque habitant morbi tristique senectus.</p>
+			</div>
+		</li>
+		<li data-orbit-slide="headline-2">
+			<h2>Headline 2</h2>
+			<h3>Subheadline</h3>
+			<p>Pellentesque habitant morbi tristique senectus.</p>
+		</li>
+		<li data-orbit-slide="headline-3">
+			<h2>Headline 3</h2>
+			<h3>Subheadline</h3>
+			<p>Pellentesque habitant morbi tristique senectus.</p>
+		</li>
+	</ul>
 
-
-	<script>
-	document.write('<script src=' +
-		('__proto__' in {} ? 'js/vendor/zepto' : 'js/vendor/jquery') +
-		'.js><\/script>')
-	</script>
-
-	<!-- // <script src="js/foundation/foundation.js"></script> -->
-
-
-	<script src="js/foundation/foundation.js"></script>
-
-	<script src="js/foundation/foundation.interchange.js"></script>
-
-	<script src="js/foundation/foundation.abide.js"></script>
-
-	<script src="js/foundation/foundation.dropdown.js"></script>
-
-	<script src="js/foundation/foundation.placeholder.js"></script>
-
-	<script src="js/foundation/foundation.forms.js"></script>
-
-	<script src="js/foundation/foundation.alerts.js"></script>
-
-	<script src="js/foundation/foundation.magellan.js"></script>
-
-	<script src="js/foundation/foundation.reveal.js"></script>
-
-	<script src="js/foundation/foundation.tooltips.js"></script>
-
-	<script src="js/foundation/foundation.clearing.js"></script>
-
-	<script src="js/foundation/foundation.cookie.js"></script>
-
-	<script src="js/foundation/foundation.joyride.js"></script>
-
-	<script src="js/foundation/foundation.orbit.js"></script>
-
-	<script src="js/foundation/foundation.section.js"></script>
-
-	<script src="js/foundation/foundation.topbar.js"></script>
+</div>
+ -->
 
 
 
-	<script>
-	$(document).foundation();
+<br>
 
+
+
+
+
+
+
+
+<script>
+document.write('<script src=' +
+	('__proto__' in {} ? 'js/vendor/zepto' : 'js/vendor/jquery') +
+	'.js><\/script>')
+</script>
+
+<!-- // <script src="js/foundation/foundation.js"></script> -->
+
+
+<script src="js/foundation/foundation.js"></script>
+
+<script src="js/foundation/foundation.interchange.js"></script>
+
+<script src="js/foundation/foundation.abide.js"></script>
+
+<script src="js/foundation/foundation.dropdown.js"></script>
+
+<script src="js/foundation/foundation.placeholder.js"></script>
+
+<script src="js/foundation/foundation.forms.js"></script>
+
+<script src="js/foundation/foundation.alerts.js"></script>
+
+<script src="js/foundation/foundation.magellan.js"></script>
+
+<script src="js/foundation/foundation.reveal.js"></script>
+
+<script src="js/foundation/foundation.tooltips.js"></script>
+
+<script src="js/foundation/foundation.clearing.js"></script>
+
+<script src="js/foundation/foundation.cookie.js"></script>
+
+<script src="js/foundation/foundation.joyride.js"></script>
+
+<script src="js/foundation/foundation.orbit.js"></script>
+
+<script src="js/foundation/foundation.section.js"></script>
+
+<script src="js/foundation/foundation.topbar.js"></script>
+
+
+
+<script>
+$(document).foundation();
+
+var places = new Array();
+places.push('front');
+places.push('resultpage');
+places.push('queryhistorypage');
+places.push('indexpage');
+
+function moveTo(position){
+
+
+	$.each(places,function(index, value){
+		var str = '#' + value;
+		console.log("h");
+		$(str).hide();
+
+	});
+
+	console.log("ha" + position);
+	var str = '#' + position;
+	$(str).show();
+
+}
+
+
+$('#backToFront').click(function(){
+
+	console.log("go to front");
+	moveTo('front');
+
+});
 
 // in foundation.orbit
 // bullets disabled
 // right left arrow disabled
 // click action of container to toggle timer disabled (timer remains)
+$('#toIndex').click(function(){
+
+    $.getJSON( "sampleindex.php", 
+
+	    function( data ) {
+
+		console.log(JSON.stringify(data, null, "\t"));
 
 
-$('#search').click(function(){
+	    var htmlstr = '<h2>Check these out!</h2>';
+	    for( var i = 0 ; i < data.length; i++){
 
-	var query = $('input').val();
+
+	    	htmlstr += "<input class='requery' id='checkbox" + i + "' index='" + data[i] + "' type='checkbox'><label for='checkbox" + i + "'>" + data[i] + "</label>";
+
+	    }
+
+
+	    htmlstr += "<br><a href='#' id='ReSearchButton' class='button [secondary success alert]'>Search using these Index</a>";
+
+	    $('#indexPanel').html(htmlstr);
+
+	    $("#ReSearchButton").click(function(){
+
+	    	var query ='';
+
+	    	$(".requery:checked").each(function(){
+	    		query += $(this).attr('index') + " ";
+
+	    	});
+
+	    	console.log(query);
+
+	    	reSearchFunc(query);
+	    });
+		moveTo('indexpage');
+
+	});
+
+});
+
+
+$('#toQueryHistory').click(moveTo('querypage'));
+
+$('#frontSearchButton').click(function(){
+
+	var query = $('#frontSearch').val();
 	console.log( ); 
 
     // send out request
@@ -223,23 +320,23 @@ $('#search').click(function(){
       // });
 
 
-    console.log(JSON.stringify(data, null, "\t"));
+console.log(JSON.stringify(data, null, "\t"));
 
 
     // var htmlstr= '  <h3>ABc <br> <small>Small segment header.</small></h3>';
 
-    var htmlstr = '<table><tbody>';
+    var htmlstr = '<table style=\'min-width:100% !important;\'><tbody>';
     for( var i = 0 ; i < data.length; i++){
 
 
     	var keyword = data[i].keyword.toString();
     	keyword = keyword.replace(",", ' ');
 
-    	htmlstr += '<tr><td><h3>Score: ' + data[i].score + '</h3><br><a ls=\'' + keyword + '\' class=\'sim\'>similar pages</a></td>';
+    	htmlstr += '<tr><td><ul class="side-nav"><li class="active"><a src=\'' + data[i].url +'\'><h3>Score: ' + data[i].score + '</h3><br><a ls=\'' + keyword + "\'class='sim' url=\'" + data[i].url +"\'>similar pages</a></a></li></ul></td>";
 
 
 
-    	htmlstr += "<td><h2><a src='" + data[i].url +"'>" + data[i].title + '</a></h2>';
+    	htmlstr += "<td><h2>" + data[i].title + '</h2>';
     	htmlstr += '<h3><small>' + data[i].url + '';
     	htmlstr += '' + data[i].lmd + ', ' + data[i].size +'<br>';
     	htmlstr += '</small></h3>';
@@ -263,7 +360,7 @@ $('#search').click(function(){
     		htmlstr += ''+ data[i].child[j]  +'<br>'
     	}
     	
-    	htmlstr += '</small></h4><br></td></tr>';
+    	htmlstr += '</small></h4></td></tr>';
 
 
     }
@@ -271,9 +368,32 @@ $('#search').click(function(){
     htmlstr += '</tbody></table>';
 
     $('#resultPanel').html(htmlstr);
-
-    $('#fancyResultPanel').html(htmlstr);
     
+
+    $(".sim").click(function(){
+
+    	var query = $(this).attr('url');
+
+
+	    $.getJSON( "samplesimilarpage.php", 
+	    {
+	    	query: query
+	    },
+	    function( data ) {
+	    	// receive top five words of that page for requery
+	    	var keyword = data.toString();
+    		keyword = keyword.replace(",", ' ');
+
+	    	reSearchFunc(keyword);
+	    });
+    	
+    });
+
+
+
+    moveTo('resultpage');
+    // $('#fancyResultPanel').html(htmlstr);
+    Foundation.libs.forms.assemble();    
       // $( "<ul/>", {
       //   "class": "my-new-list",
       //   html: items.join( "" )
@@ -282,6 +402,181 @@ $('#search').click(function(){
 });
 
 });
+
+
+function reSearchFunc(query){
+
+	// var query = $('#ReSearch').val();
+	// console.log( ); 
+
+    // send out request
+
+    // get table back
+
+
+    $.getJSON( "samplereply.php", 
+    {
+    	query: query
+    },
+
+
+    function( data ) {
+
+      // var items = [];
+      // $.each( data, function( key, val ) {
+      //   items.push( "<li id='" + key + "'>" + val + "</li>" );
+      // });
+
+
+console.log(JSON.stringify(data, null, "\t"));
+
+
+    // var htmlstr= '  <h3>ABc <br> <small>Small segment header.</small></h3>';
+
+    var htmlstr = '<table style=\'min-width:100% !important;\'><tbody>';
+    for( var i = 0 ; i < data.length; i++){
+
+
+    	var keyword = data[i].keyword.toString();
+    	keyword = keyword.replace(",", ' ');
+
+    	htmlstr += '<tr><td><ul class="side-nav"><li class="active"><a src=\'' + data[i].url +'\'><h3>Score: ' + data[i].score + '</h3><br><a ls=\'' + keyword + '\' class=\'sim\'>similar pages</a></a></li></ul></td>';
+
+
+
+    	htmlstr += "<td><h2>" + data[i].title + '</h2>';
+    	htmlstr += '<h3><small>' + data[i].url + '';
+    	htmlstr += '' + data[i].lmd + ', ' + data[i].size +'<br>';
+    	htmlstr += '</small></h3>';
+
+
+    	htmlstr += '<h4><small>';
+    	for( var j = 0 ; j < data[i].keyword.length ; j++){
+    		htmlstr += ''+ data[i].keyword[j].word + ' ' + data[i].keyword[j].freq  +'; '
+    	}
+
+    	htmlstr += '<br>'
+
+    	for( var j = 0 ; j < data[i].parent.length ; j++){
+    		htmlstr += ''+ data[i].parent[j]  +'<br>'
+    	}
+
+    	htmlstr += ''
+
+    	
+    	for( var j = 0 ; j < data[i].child.length ; j++){
+    		htmlstr += ''+ data[i].child[j]  +'<br>'
+    	}
+    	
+    	htmlstr += '</small></h4></td></tr>';
+
+
+    }
+
+    htmlstr += '</tbody></table>';
+
+    $('#resultPanel').html(htmlstr);
+    moveTo('resultpage');
+
+    // $('#fancyResultPanel').html(htmlstr);
+    Foundation.libs.forms.assemble();    
+      // $( "<ul/>", {
+      //   "class": "my-new-list",
+      //   html: items.join( "" )
+      // }).appendTo( "body" );
+
+});
+
+}
+
+
+$('#barSearchButton').click(function(){
+
+	var query = $('#barSearch').val();
+	console.log( ); 
+
+    // send out request
+
+    // get table back
+
+
+    $.getJSON( "samplereply.php", 
+    {
+    	query: query
+    },
+
+
+    function( data ) {
+
+      // var items = [];
+      // $.each( data, function( key, val ) {
+      //   items.push( "<li id='" + key + "'>" + val + "</li>" );
+      // });
+
+
+console.log(JSON.stringify(data, null, "\t"));
+
+
+    // var htmlstr= '  <h3>ABc <br> <small>Small segment header.</small></h3>';
+
+    var htmlstr = '<table style=\'min-width:100% !important;\'><tbody>';
+    for( var i = 0 ; i < data.length; i++){
+
+
+    	var keyword = data[i].keyword.toString();
+    	keyword = keyword.replace(",", ' ');
+
+    	htmlstr += '<tr><td><ul class="side-nav"><li class="active"><a src=\'' + data[i].url +'\'><h3>Score: ' + data[i].score + '</h3><br><a ls=\'' + keyword + '\' class=\'sim\'>similar pages</a></a></li></ul></td>';
+
+
+
+    	htmlstr += "<td><h2>" + data[i].title + '</h2>';
+    	htmlstr += '<h3><small>' + data[i].url + '';
+    	htmlstr += '' + data[i].lmd + ', ' + data[i].size +'<br>';
+    	htmlstr += '</small></h3>';
+
+
+    	htmlstr += '<h4><small>';
+    	for( var j = 0 ; j < data[i].keyword.length ; j++){
+    		htmlstr += ''+ data[i].keyword[j].word + ' ' + data[i].keyword[j].freq  +'; '
+    	}
+
+    	htmlstr += '<br>'
+
+    	for( var j = 0 ; j < data[i].parent.length ; j++){
+    		htmlstr += ''+ data[i].parent[j]  +'<br>'
+    	}
+
+    	htmlstr += ''
+
+    	
+    	for( var j = 0 ; j < data[i].child.length ; j++){
+    		htmlstr += ''+ data[i].child[j]  +'<br>'
+    	}
+    	
+    	htmlstr += '</small></h4></td></tr>';
+
+
+    }
+
+    htmlstr += '</tbody></table>';
+
+    $('#resultPanel').html(htmlstr);
+    moveTo('resultpage');
+
+    // $('#fancyResultPanel').html(htmlstr);
+    Foundation.libs.forms.assemble();    
+      // $( "<ul/>", {
+      //   "class": "my-new-list",
+      //   html: items.join( "" )
+      // }).appendTo( "body" );
+
+});
+
+});
+
+
+moveTo('front');
 
 
 // depricated
