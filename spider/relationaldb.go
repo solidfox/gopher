@@ -143,9 +143,6 @@ func (rdb *RelationalDB) CompleteThePageInfoOf(pages []*Page) {
 	tx.Commit()
 }
 
-//
-func
-
 // Fills out the Word's WordID provided that it's Word field is not the empty string.
 func (rdb *RelationalDB) AddWordIDTo(words []*Word) {
 	tx, _ := rdb.db.Begin()
