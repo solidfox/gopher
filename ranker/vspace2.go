@@ -46,7 +46,7 @@ func computeAveDocLen(pages []*spider.Page) {
 	AveDocLen = float64(TotalDocLen) / float64(len(pages))
 }
 
-func SearchingResult(query spider.Page, option int) (resultDocIDs []int64) {
+func SearchingResult(query *spider.Page, option int) (resultDocIDs []int64) {
 	db := spider.NewDBM("DBM.db")
 	//get pages and inverted index
 	invertedindex := db.GetInvertedIndex()
@@ -261,9 +261,9 @@ func GetTFPhased(page *spider.Page, phaseterms []string) float64 {
 			resultPos = tempResult
 		}
 	}
-	// if len(resultPos) != 0 {
-	// 	fmt.Printf("Terms:%v	%v\n", requiredWords[0].Positions(), requiredWords[1].Positions())
-	// }
+	if len(resultPos) != 0 {
+		fmt.Printf("Terms:%v	%v\n", requiredWords[0].Positions(), requiredWords[1].Positions())
+	}
 
 	return float64(len(resultPos))
 }
