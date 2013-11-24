@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<!--[if IE 8]> 				 <html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Foundation 4</title>
+
+
+	<link rel="stylesheet" href="css/foundation.css">
+
+
+	<script src="js/vendor/custom.modernizr.js"></script>
+
+</head>
+<body>
+
+
+<nav class="top-bar" data-topbar>
+  <ul class="title-area">
+    <li class="name">
+      <h1><a href="#">My Site</a></h1>
+    </li>
+  </ul>
+
+  <section class="top-bar-section">
+    <!-- Right Nav Section -->
+    <ul class="right">
+      <li class="active"><a href="#">Right Nav Button Active</a></li>
+      <li class="has-dropdown">
+        <a href="#">Right Button with Dropdown</a>
+        <ul class="dropdown">
+          <li><a href="#">First link in dropdown</a></li>
+        </ul>
+      </li>
+
+
+    </ul>
+
+
+
+    <!-- Left Nav Section -->
+    <ul class="left">
+
+    	<li class="has-form">
+  <div class="row collapse">
+    <div class="large-8 small-9 columns">
+      <input type="text" placeholder="Find Stuff">
+    </div>
+    <div class="large-4 small-3 columns">
+      <a href="#" class="alert button expand">Search</a>
+    </div>
+  </div>
+</li>
+
+      <li><a href="#">Left Nav Button</a></li>
+    </ul>
+  </section>
+</nav>
+
+
+	<div class="row">
+		<div class="twelve columns">
+			<h2>Welcome to Gopher</h2>
+			<p>We are a small group of students from <strong> HKUST </strong> </p>
+			<p>Please enjoy! </p>
+			<hr />
+		</div>
+	</div>
+
+
+
+
+
+	<div class="row">
+
+
+
+		<form>
+			<fieldset>
+				<legend>Type something</legend>
+
+				<label></label>
+				<input type="text" placeholder="anything...">
+
+
+				<div class="four columns">
+					<a href="#" id='search' class="large secondary button">Search</a>
+
+
+				</div>
+
+<!-- 				<div class="four columns">
+					<a href="#" class="large secondary button">Lucky Draw!</a>
+				</div>
+ -->
+			</fieldset>
+
+		</form>
+
+		<h3>Results</h3>
+
+		<div class="panel" id='resultPanel'>
+
+
+		</div>
+
+
+			<div class='row'>
+				<ul data-orbit>
+					<li data-orbit-slide="headline-1">
+								<div id='fancyResultPanel'>
+
+						<br>
+						<h2>Headline 1</h2>
+						<h3>Subheadline</h3>
+						<p>Pellentesque habitant morbi tristique senectus.</p>
+								</div>
+<!-- </div> -->
+					</li>
+					<li data-orbit-slide="headline-2">
+						<h2>Headline 2</h2>
+						<h3>Subheadline</h3>
+						<p>Pellentesque habitant morbi tristique senectus.</p>
+					</li>
+					<li data-orbit-slide="headline-3">
+						<h2>Headline 3</h2>
+						<h3>Subheadline</h3>
+						<p>Pellentesque habitant morbi tristique senectus.</p>
+					</li>
+				</ul>
+
+			</div>
+
+
+	</div>
+
+
+	<br>
+
+
+
+
+
+
+
+
+	<script>
+	document.write('<script src=' +
+		('__proto__' in {} ? 'js/vendor/zepto' : 'js/vendor/jquery') +
+		'.js><\/script>')
+	</script>
+
+	<!-- // <script src="js/foundation/foundation.js"></script> -->
+
+
+	<script src="js/foundation/foundation.js"></script>
+
+	<script src="js/foundation/foundation.interchange.js"></script>
+
+	<script src="js/foundation/foundation.abide.js"></script>
+
+	<script src="js/foundation/foundation.dropdown.js"></script>
+
+	<script src="js/foundation/foundation.placeholder.js"></script>
+
+	<script src="js/foundation/foundation.forms.js"></script>
+
+	<script src="js/foundation/foundation.alerts.js"></script>
+
+	<script src="js/foundation/foundation.magellan.js"></script>
+
+	<script src="js/foundation/foundation.reveal.js"></script>
+
+	<script src="js/foundation/foundation.tooltips.js"></script>
+
+	<script src="js/foundation/foundation.clearing.js"></script>
+
+	<script src="js/foundation/foundation.cookie.js"></script>
+
+	<script src="js/foundation/foundation.joyride.js"></script>
+
+	<script src="js/foundation/foundation.orbit.js"></script>
+
+	<script src="js/foundation/foundation.section.js"></script>
+
+	<script src="js/foundation/foundation.topbar.js"></script>
+
+
+
+	<script>
+	$(document).foundation();
+
+
+// in foundation.orbit
+// bullets disabled
+// right left arrow disabled
+// click action of container to toggle timer disabled (timer remains)
+
+
+$('#search').click(function(){
+
+	var query = $('input').val();
+	console.log( ); 
+
+    // send out request
+
+    // get table back
+
+
+    $.getJSON( "samplereply.php", 
+    {
+    	query: query
+    },
+
+
+    function( data ) {
+
+      // var items = [];
+      // $.each( data, function( key, val ) {
+      //   items.push( "<li id='" + key + "'>" + val + "</li>" );
+      // });
+
+
+    console.log(JSON.stringify(data, null, "\t"));
+
+
+    // var htmlstr= '  <h3>ABc <br> <small>Small segment header.</small></h3>';
+
+    var htmlstr = '<table><tbody>';
+    for( var i = 0 ; i < data.length; i++){
+
+
+    	var keyword = data[i].keyword.toString();
+    	keyword = keyword.replace(",", ' ');
+
+    	htmlstr += '<tr><td><h3>Score: ' + data[i].score + '</h3><br><a ls=\'' + keyword + '\' class=\'sim\'>similar pages</a></td>';
+
+
+
+    	htmlstr += "<td><h2><a src='" + data[i].url +"'>" + data[i].title + '</a></h2>';
+    	htmlstr += '<h3><small>' + data[i].url + '';
+    	htmlstr += '' + data[i].lmd + ', ' + data[i].size +'<br>';
+    	htmlstr += '</small></h3>';
+
+
+    	htmlstr += '<h4><small>';
+    	for( var j = 0 ; j < data[i].keyword.length ; j++){
+    		htmlstr += ''+ data[i].keyword[j].word + ' ' + data[i].keyword[j].freq  +'; '
+    	}
+
+    	htmlstr += '<br>'
+
+    	for( var j = 0 ; j < data[i].parent.length ; j++){
+    		htmlstr += ''+ data[i].parent[j]  +'<br>'
+    	}
+
+    	htmlstr += ''
+
+    	
+    	for( var j = 0 ; j < data[i].child.length ; j++){
+    		htmlstr += ''+ data[i].child[j]  +'<br>'
+    	}
+    	
+    	htmlstr += '</small></h4><br></td></tr>';
+
+
+    }
+
+    htmlstr += '</tbody></table>';
+
+    $('#resultPanel').html(htmlstr);
+
+    $('#fancyResultPanel').html(htmlstr);
+    
+      // $( "<ul/>", {
+      //   "class": "my-new-list",
+      //   html: items.join( "" )
+      // }).appendTo( "body" );
+
+});
+
+});
+
+
+// depricated
+function remove(){
+
+	$('.orbit-prev').remove();
+	$('.orbit-next').remove();
+
+}
+
+</script>
+</body>
+</html>
