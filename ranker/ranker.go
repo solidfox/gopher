@@ -30,5 +30,14 @@ func NewRanker(option int) *Ranker {
 }
 
 func (r *Ranker) Search(query *spider.Page) []*ResultPage {
+	pageIDs := SearchingResult(query, option)
+	db := spider.NewRelationalDB("sqlite.db")
+	pages := make([]*spider.Page, length(pageIDs))
+	resultPages := make([]*ResultPage, length(pageIDs))
+	for i, id := range pageIDs {
+		pages[i] = spider.NewPage()
+		pages[i].PageID = id
+	}
+	db.CompleteThePageInfoOf(pages)
 	return []*ResultPage{&ResultPage{Title: query.Words()[0].Word}}
 }
