@@ -46,7 +46,7 @@ func computeAveDocLen(pages []*spider.Page) {
 	AveDocLen = float64(TotalDocLen) / float64(len(pages))
 }
 
-func SearchingResult(query spider.Page, option int) (resultDocIDs []int64) {
+func SearchingResult(query *spider.Page, option int) (resultDocIDs []int64) {
 	db := spider.NewDBM("DBM.db")
 	//get pages and inverted index
 	invertedindex := db.GetInvertedIndex()
@@ -129,8 +129,12 @@ func SearchingResult(query spider.Page, option int) (resultDocIDs []int64) {
 			//non-phase part
 			for _, word := range words {
 				wordID := word.WordID
-				docResults[index] += GetTFIDF(page, allStoredPages, invertedTable, wordID)
+				temp := GetTFIDF(page, allStoredPages, invertedTable, wordID)
+				docResults[index] += temp
+				//fmt.Printf("temp: %v\n", temp)
+				fmt.Printf("wordID: %v\n", wordID)
 			}
+
 			//phase part
 			for _, phase := range phases {
 				//var phaseTerm []spider.Word
@@ -153,6 +157,34 @@ func SearchingResult(query spider.Page, option int) (resultDocIDs []int64) {
 			docResults[index] = CosSim(page, allStoredPages, invertedTable, words, phases)
 		}
 	}
+	fmt.Printf("words:")
+	for _, word := range words {
+
+		fmt.Printf("	%v", word.Word)
+	}
+
+	fmt.Printf("docResults: %v\n", docResults)
+	fmt.Printf("docIDs: %v\n", docIDs)
+	var MaxNumberOfDocRetieve = 50
+	for i := 0; i < MaxNumberOfDocRetieve; i++ {
+		if len(docResults) > 0 {
+			MaxIndex := 0
+			MaxScore := 0.0
+			for index, docResult := range docResults {
+				if docResult > MaxScore {
+					MaxIndex = index
+					MaxScore = docResult
+				}
+			}
+			//store result
+			if MaxScore > 0 {
+				resultDocIDs = append(resultDocIDs, docIDs[MaxIndex])
+			}
+			//remove max term
+			docResults = append(docResults[:MaxIndex], docResults[MaxIndex+1:]...)
+			docIDs = append(docIDs[:MaxIndex], docIDs[MaxIndex+1:]...)
+		}
+	}
 
 	relationalDb.Close()
 	db.Close()
@@ -170,8 +202,9 @@ func CosSim(page *spider.Page, allStoredPages []*spider.Page, invertedTable map[
 		//compute Doc length
 		dLen += (float64(word.TF())) * (float64(word.TF()))
 		for _, queryword := range query {
-			if word == queryword {
+			if word.Word == queryword.Word {
 				dqSum += float64(word.TF()) * 1.0
+				//fmt.Print("\n\n\n\n\n\nHIHI")
 			}
 		}
 	}
