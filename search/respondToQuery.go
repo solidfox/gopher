@@ -6,12 +6,15 @@ import (
 	"gopher/ranker"
 	"gopher/spider"
 	"io"
+	"strings"
 )
 
 func RespondToQuery(w io.Writer, q string) {
 	query := spider.NewPage()
-	// TODO Phrases
-	query.AddText(q)
+
+	for _, word := range strings.Fields(q) {
+		query.AddText(word)
+	}
 
 	r := ranker.NewRanker(0)
 	results := r.Search(query)
