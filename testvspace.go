@@ -31,9 +31,9 @@ func main() {
 	//ranker.PrintHiHi()
 
 	pages2 := db.GetPages2()
-	var testingPage *spider.Page
+	var testingPage spider.Page
 	for _, page := range pages2 {
-		testingPage = page
+		testingPage = *page
 		break
 	}
 	// for _, word := range testingPage.Words() {
@@ -41,7 +41,7 @@ func main() {
 	// }
 	db.Close()
 	//ranker.SearchingResult(testingPage, ranker.TFIDF)
-	ranker.SearchingResult(testingPage, ranker.TFIDF)
+	ranker.SearchingResult(testingPage, ranker.Cos)
 	elapsed = time.Since(start)
 	fmt.Printf("Time spent on main: %v\n", elapsed)
 
