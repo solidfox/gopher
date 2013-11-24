@@ -118,7 +118,7 @@ func (rdb *RelationalDB) PageByPageID(pageID int64) (p *Page) {
 	return p
 }
 
-// Uses the Page's PageID to fill out all information about the page except the words it
+// Uses the Page's PageID or URL to fill out all information about the page except the words it
 // contains (since those are not held in the relational db).
 func (rdb *RelationalDB) CompleteThePageInfoOf(pages []*Page) {
 	var links string
@@ -131,10 +131,20 @@ func (rdb *RelationalDB) CompleteThePageInfoOf(pages []*Page) {
 			for _, link := range linkSlice {
 				p.AddLink(link, "")
 			}
+		} else if length(p.URL) > 0 {
+			row := tx.QueryRow("SELECT * FROM pageInfo WHERE url = ?", p.URL)
+			row.Scan(&p.PageID, &p.Size, &p.URL, &p.Modified, &p.Title, &links)
+			linkSlice := strings.Fields(links)
+			for _, link := range linkSlice {
+				p.AddLink(link, "")
+			}
 		}
 	}
 	tx.Commit()
 }
+
+//
+func
 
 // Fills out the Word's WordID provided that it's Word field is not the empty string.
 func (rdb *RelationalDB) AddWordIDTo(words []*Word) {
