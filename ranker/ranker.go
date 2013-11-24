@@ -30,5 +30,5 @@ func NewRanker(option int) *Ranker {
 }
 
 func (r *Ranker) Search(query *spider.Page) []*ResultPage {
-	return []*ResultPage{&ResultPage{Title: "goj"}}
+	return []*ResultPage{&ResultPage{Title: query.Words()[0].Word}}
 }
