@@ -131,7 +131,7 @@ func (rdb *RelationalDB) CompleteThePageInfoOf(pages []*Page) {
 			for _, link := range linkSlice {
 				p.AddLink(link, "")
 			}
-		} else if length(p.URL) > 0 {
+		} else if len(p.URL) > 0 {
 			row := tx.QueryRow("SELECT * FROM pageInfo WHERE url = ?", p.URL)
 			row.Scan(&p.PageID, &p.Size, &p.URL, &p.Modified, &p.Title, &links)
 			linkSlice := strings.Fields(links)
