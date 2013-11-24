@@ -32,6 +32,10 @@
 		<section class="top-bar-section">
 			<!-- Right Nav Section -->
 			<ul class="right">
+
+
+				<li><a href="#" id='clearHistoryButton'>Clear History</a></li>
+
 				<!-- <li class="active"><a href="#">Right Nav Button Active</a></li> -->
 				<li class="has-dropdown">
 					<a href="#">Other Features</a>
@@ -53,7 +57,7 @@
 				<li class="has-form">
 					<div class="row collapse">
 						<div class="large-8 small-9 columns">
-							<input type="text" placeholder="Find Stuff">
+							<input id='barSearch' type="text" placeholder="Find Stuff">
 						</div>
 						<div class="large-4 small-3 columns">
 							<a href="#" id='barSearchButton' class="alert button expand">Search</a>
@@ -61,7 +65,6 @@
 					</div>
 				</li>
 
-				<!-- <li><a href="#">Left Nav Button</a></li> -->
 			</ul>
 		</section>
 	</nav>
@@ -87,7 +90,7 @@
 				<legend>Type something</legend>
 
 				<label></label>
-				<input type="text" placeholder="anything...">
+				<input id='frontSearch' type="text" placeholder="anything...">
 
 
 				<div class="four columns">
@@ -133,33 +136,6 @@
 
 	</div>
 </div>
-
-<!-- 
-<div class='row'>
-	<ul data-orbit>
-		<li data-orbit-slide="headline-1">
-			<div id='fancyResultPanel'>
-
-				<br>
-				<h2>Headline 1</h2>
-				<h3>Subheadline</h3>
-				<p>Pellentesque habitant morbi tristique senectus.</p>
-			</div>
-		</li>
-		<li data-orbit-slide="headline-2">
-			<h2>Headline 2</h2>
-			<h3>Subheadline</h3>
-			<p>Pellentesque habitant morbi tristique senectus.</p>
-		</li>
-		<li data-orbit-slide="headline-3">
-			<h2>Headline 3</h2>
-			<h3>Subheadline</h3>
-			<p>Pellentesque habitant morbi tristique senectus.</p>
-		</li>
-	</ul>
-
-</div>
- -->
 
 
 
@@ -234,7 +210,7 @@ function moveTo(position){
 
 	});
 
-	console.log("ha" + position);
+	// console.log("ha" + position);
 	var str = '#' + position;
 	$(str).show();
 
@@ -248,45 +224,41 @@ $('#backToFront').click(function(){
 
 });
 
+
 // in foundation.orbit
 // bullets disabled
 // right left arrow disabled
 // click action of container to toggle timer disabled (timer remains)
 $('#toIndex').click(function(){
 
-    $.getJSON( "sampleindex.php", 
+	$.getJSON( "sampleindex.php", 
 
-	    function( data ) {
+		function( data ) {
 
-		console.log(JSON.stringify(data, null, "\t"));
+		var htmlstr = "<form><fieldset><legend>Construct query using index</legend><label></label><input id='indexSearch' type='text' placeholder=''></input><div class='four columns'><a href='#' id='ReSearchButton' class='radius secondary button'>Search</a></div></fieldset></form><br>";
 
+		htmlstr += "<div class='row'><div class='button-bar'>";
 
-	    var htmlstr = '<h2>Check these out!</h2>';
-	    for( var i = 0 ; i < data.length; i++){
+		for( var i = 0 ; i < data.length; i++){
+			htmlstr += "<ul class='button-group'><li><a href='#' class='index button [tiny small large]'>" + data[i] + "</a></li></ul>";
+		}
 
+		htmlstr +="</div>";
 
-	    	htmlstr += "<input class='requery' id='checkbox" + i + "' index='" + data[i] + "' type='checkbox'><label for='checkbox" + i + "'>" + data[i] + "</label>";
+		$('#indexPanel').html(htmlstr);
 
-	    }
+		$(".index").click(function(){
+			var str = $('#indexSearch').val() + " " + $(this).text();
+			$('#indexSearch').val(  str );
+		});
 
+		$("#ReSearchButton").click(function(){
 
-	    htmlstr += "<br><a href='#' id='ReSearchButton' class='button [secondary success alert]'>Search using these Index</a>";
+			var query =$('#indexSearch').val();
+			addRecord(query);
 
-	    $('#indexPanel').html(htmlstr);
-
-	    $("#ReSearchButton").click(function(){
-
-	    	var query ='';
-
-	    	$(".requery:checked").each(function(){
-	    		query += $(this).attr('index') + " ";
-
-	    	});
-
-	    	console.log(query);
-
-	    	reSearchFunc(query);
-	    });
+			reSearchFunc(query);
+		});
 		moveTo('indexpage');
 
 	});
@@ -294,198 +266,154 @@ $('#toIndex').click(function(){
 });
 
 
-$('#toQueryHistory').click(moveTo('querypage'));
+
+$('#toQueryHistory').click(function(){
+
+		var htmlstr = "<form><fieldset><legend>Construct query using index</legend><label></label><input id='historySearch' type='text' placeholder=''></input><div class='four columns'><a href='#' id='historySearchButton' class='radius secondary button'>Search</a></div></fieldset></form><br>";
+
+		htmlstr += "<div class='row'><div class='button-bar'>";
+
+		// console.log(JSON.stringify(getQueryHistory()));
+		var a = getQueryHistory();
+		data = a.split(';');
+
+		// console.log( typeof a);
+
+		var patt = / +/g;
+
+		$.each(data, function(index,value){
+			var sub = value.split(" ");
+
+			htmlstr += "<ul class='button-group'>";
+			console.log(sub);
+
+			$.each(sub, function(index,value){
+
+				if( value.trim() != "" ){  
+
+					htmlstr += "<li><a href='#' class='history button [tiny small large]'>" + value + "</a></li>";
+				}
+			});
+
+			htmlstr +="</ul>";
+
+		});
+
+		htmlstr +="</div>";
+
+
+		$('#queryhistoryPanel').html(htmlstr);
+
+		$(".history").click(function(){
+			var str = $('#historySearch').val() + " " + $(this).text();
+			$('#historySearch').val(  str );
+		});
+
+		$("#historySearchButton").click(function(){
+
+			var query =$('#historySearch').val();
+			addRecord(query);
+
+			reSearchFunc(query);
+		});
+		moveTo('queryhistorypage');
+
+
+
+});
 
 $('#frontSearchButton').click(function(){
 
 	var query = $('#frontSearch').val();
-	console.log( ); 
+	console.log(query);
+	addRecord(query);
+	$.getJSON( "samplereply.php", 
+	{
+		query: query
+	},
+	function( data ) {
+		writeToTable(data);
+	});
 
-    // send out request
-
-    // get table back
-
-
-    $.getJSON( "samplereply.php", 
-    {
-    	query: query
-    },
-
-
-    function( data ) {
-
-      // var items = [];
-      // $.each( data, function( key, val ) {
-      //   items.push( "<li id='" + key + "'>" + val + "</li>" );
-      // });
+});
 
 
-console.log(JSON.stringify(data, null, "\t"));
+
+function writeToTable(data){
+
+	var htmlstr = '<table style=\'min-width:100% !important;\'><tbody>';
+	for( var i = 0 ; i < data.length; i++){
+
+		if( i >= 50) break;
+		
+		var keyword = data[i].keyword.toString();
+		keyword = keyword.replace(",", ' ');
+
+		htmlstr += '<tr><td><ul class="side-nav"><li class="active"><h3>Score: ' + data[i].score + '</h3><br><a ls=\'' + keyword + "\'class='sim' url=\'" + data[i].url +"\'>similar pages</a></li></ul></td>";
 
 
-    // var htmlstr= '  <h3>ABc <br> <small>Small segment header.</small></h3>';
+		htmlstr += "<td><h2><a src=\'" + data[i].url +"\'>" + data[i].title + '</a></h2>';
+		htmlstr += '<h3><small>' + data[i].url + '';
+		htmlstr += '<br>' + data[i].lmd + ', ' + data[i].size +'<br>';
+		htmlstr += '</small></h3>';
 
-    var htmlstr = '<table style=\'min-width:100% !important;\'><tbody>';
-    for( var i = 0 ; i < data.length; i++){
+		htmlstr += '<h4><small>';
+		for( var j = 0 ; j < data[i].keyword.length ; j++){
+			htmlstr += ''+ data[i].keyword[j].word + ' ' + data[i].keyword[j].freq  +'; '
+		}
 
+		htmlstr += '<br>'
+		for( var j = 0 ; j < data[i].parent.length ; j++){
+			htmlstr += ''+ data[i].parent[j]  +'<br>'
+		}
 
-    	var keyword = data[i].keyword.toString();
+		for( var j = 0 ; j < data[i].child.length ; j++){
+			htmlstr += ''+ data[i].child[j]  +'<br>'
+		}
+
+		htmlstr += '</small></h4></td></tr>';
+	}
+
+	htmlstr += '</tbody></table>';
+	$('#resultPanel').html(htmlstr);
+
+	$(".sim").click(function(){
+
+		var query = $(this).attr('url');
+		addRecord(query);
+
+		console.log('similar!');
+
+		$.getJSON( "samplesimilarpage.php", 
+		{
+			query: query
+		},
+		function( data ) {
+    	// receive top five words of that page for requery
+    	var keyword = data.toString();
     	keyword = keyword.replace(",", ' ');
 
-    	htmlstr += '<tr><td><ul class="side-nav"><li class="active"><a src=\'' + data[i].url +'\'><h3>Score: ' + data[i].score + '</h3><br><a ls=\'' + keyword + "\'class='sim' url=\'" + data[i].url +"\'>similar pages</a></a></li></ul></td>";
-
-
-
-    	htmlstr += "<td><h2>" + data[i].title + '</h2>';
-    	htmlstr += '<h3><small>' + data[i].url + '';
-    	htmlstr += '' + data[i].lmd + ', ' + data[i].size +'<br>';
-    	htmlstr += '</small></h3>';
-
-
-    	htmlstr += '<h4><small>';
-    	for( var j = 0 ; j < data[i].keyword.length ; j++){
-    		htmlstr += ''+ data[i].keyword[j].word + ' ' + data[i].keyword[j].freq  +'; '
-    	}
-
-    	htmlstr += '<br>'
-
-    	for( var j = 0 ; j < data[i].parent.length ; j++){
-    		htmlstr += ''+ data[i].parent[j]  +'<br>'
-    	}
-
-    	htmlstr += ''
-
-    	
-    	for( var j = 0 ; j < data[i].child.length ; j++){
-    		htmlstr += ''+ data[i].child[j]  +'<br>'
-    	}
-    	
-    	htmlstr += '</small></h4></td></tr>';
-
-
-    }
-
-    htmlstr += '</tbody></table>';
-
-    $('#resultPanel').html(htmlstr);
-    
-
-    $(".sim").click(function(){
-
-    	var query = $(this).attr('url');
-
-
-	    $.getJSON( "samplesimilarpage.php", 
-	    {
-	    	query: query
-	    },
-	    function( data ) {
-	    	// receive top five words of that page for requery
-	    	var keyword = data.toString();
-    		keyword = keyword.replace(",", ' ');
-
-	    	reSearchFunc(keyword);
-	    });
-    	
+    	reSearchFunc(keyword);
     });
 
+	});
 
-
-    moveTo('resultpage');
-    // $('#fancyResultPanel').html(htmlstr);
+	moveTo('resultpage');
     Foundation.libs.forms.assemble();    
-      // $( "<ul/>", {
-      //   "class": "my-new-list",
-      //   html: items.join( "" )
-      // }).appendTo( "body" );
 
-});
 
-});
-
+}
 
 function reSearchFunc(query){
 
-	// var query = $('#ReSearch').val();
-	// console.log( ); 
-
-    // send out request
-
-    // get table back
-
-
     $.getJSON( "samplereply.php", 
     {
     	query: query
     },
 
-
     function( data ) {
-
-      // var items = [];
-      // $.each( data, function( key, val ) {
-      //   items.push( "<li id='" + key + "'>" + val + "</li>" );
-      // });
-
-
-console.log(JSON.stringify(data, null, "\t"));
-
-
-    // var htmlstr= '  <h3>ABc <br> <small>Small segment header.</small></h3>';
-
-    var htmlstr = '<table style=\'min-width:100% !important;\'><tbody>';
-    for( var i = 0 ; i < data.length; i++){
-
-
-    	var keyword = data[i].keyword.toString();
-    	keyword = keyword.replace(",", ' ');
-
-    	htmlstr += '<tr><td><ul class="side-nav"><li class="active"><a src=\'' + data[i].url +'\'><h3>Score: ' + data[i].score + '</h3><br><a ls=\'' + keyword + '\' class=\'sim\'>similar pages</a></a></li></ul></td>';
-
-
-
-    	htmlstr += "<td><h2>" + data[i].title + '</h2>';
-    	htmlstr += '<h3><small>' + data[i].url + '';
-    	htmlstr += '' + data[i].lmd + ', ' + data[i].size +'<br>';
-    	htmlstr += '</small></h3>';
-
-
-    	htmlstr += '<h4><small>';
-    	for( var j = 0 ; j < data[i].keyword.length ; j++){
-    		htmlstr += ''+ data[i].keyword[j].word + ' ' + data[i].keyword[j].freq  +'; '
-    	}
-
-    	htmlstr += '<br>'
-
-    	for( var j = 0 ; j < data[i].parent.length ; j++){
-    		htmlstr += ''+ data[i].parent[j]  +'<br>'
-    	}
-
-    	htmlstr += ''
-
-    	
-    	for( var j = 0 ; j < data[i].child.length ; j++){
-    		htmlstr += ''+ data[i].child[j]  +'<br>'
-    	}
-    	
-    	htmlstr += '</small></h4></td></tr>';
-
-
-    }
-
-    htmlstr += '</tbody></table>';
-
-    $('#resultPanel').html(htmlstr);
-    moveTo('resultpage');
-
-    // $('#fancyResultPanel').html(htmlstr);
-    Foundation.libs.forms.assemble();    
-      // $( "<ul/>", {
-      //   "class": "my-new-list",
-      //   html: items.join( "" )
-      // }).appendTo( "body" );
-
-});
+    	writeToTable(data);
+	});
 
 }
 
@@ -493,12 +421,8 @@ console.log(JSON.stringify(data, null, "\t"));
 $('#barSearchButton').click(function(){
 
 	var query = $('#barSearch').val();
-	console.log( ); 
-
-    // send out request
-
-    // get table back
-
+	console.log(query);
+	addRecord(query);
 
     $.getJSON( "samplereply.php", 
     {
@@ -507,71 +431,9 @@ $('#barSearchButton').click(function(){
 
 
     function( data ) {
+    	writeToTable(data);
+    });
 
-      // var items = [];
-      // $.each( data, function( key, val ) {
-      //   items.push( "<li id='" + key + "'>" + val + "</li>" );
-      // });
-
-
-console.log(JSON.stringify(data, null, "\t"));
-
-
-    // var htmlstr= '  <h3>ABc <br> <small>Small segment header.</small></h3>';
-
-    var htmlstr = '<table style=\'min-width:100% !important;\'><tbody>';
-    for( var i = 0 ; i < data.length; i++){
-
-
-    	var keyword = data[i].keyword.toString();
-    	keyword = keyword.replace(",", ' ');
-
-    	htmlstr += '<tr><td><ul class="side-nav"><li class="active"><a src=\'' + data[i].url +'\'><h3>Score: ' + data[i].score + '</h3><br><a ls=\'' + keyword + '\' class=\'sim\'>similar pages</a></a></li></ul></td>';
-
-
-
-    	htmlstr += "<td><h2>" + data[i].title + '</h2>';
-    	htmlstr += '<h3><small>' + data[i].url + '';
-    	htmlstr += '' + data[i].lmd + ', ' + data[i].size +'<br>';
-    	htmlstr += '</small></h3>';
-
-
-    	htmlstr += '<h4><small>';
-    	for( var j = 0 ; j < data[i].keyword.length ; j++){
-    		htmlstr += ''+ data[i].keyword[j].word + ' ' + data[i].keyword[j].freq  +'; '
-    	}
-
-    	htmlstr += '<br>'
-
-    	for( var j = 0 ; j < data[i].parent.length ; j++){
-    		htmlstr += ''+ data[i].parent[j]  +'<br>'
-    	}
-
-    	htmlstr += ''
-
-    	
-    	for( var j = 0 ; j < data[i].child.length ; j++){
-    		htmlstr += ''+ data[i].child[j]  +'<br>'
-    	}
-    	
-    	htmlstr += '</small></h4></td></tr>';
-
-
-    }
-
-    htmlstr += '</tbody></table>';
-
-    $('#resultPanel').html(htmlstr);
-    moveTo('resultpage');
-
-    // $('#fancyResultPanel').html(htmlstr);
-    Foundation.libs.forms.assemble();    
-      // $( "<ul/>", {
-      //   "class": "my-new-list",
-      //   html: items.join( "" )
-      // }).appendTo( "body" );
-
-});
 
 });
 
@@ -579,14 +441,80 @@ console.log(JSON.stringify(data, null, "\t"));
 moveTo('front');
 
 
-// depricated
-function remove(){
-
-	$('.orbit-prev').remove();
-	$('.orbit-next').remove();
-
+function getQueryHistory()
+{
+	if(typeof(Storage)!=="undefined")
+	{
+		if (localStorage.getItem('record'))
+		{
+			console.log("here");
+			return localStorage.getItem('record');
+		} 
+		else
+		{
+			return String();
+		}
+  // document.getElementById("result").innerHTML="You have clicked the button " + localStorage.clickcount + " time(s).";
+	}
+	else
+	{
+		alert("Sorry, your browser does not support web storage...");
+	}
 }
 
+$('#clearHistoryButton').click(function(){
+	localStorage.setItem('record', String());
+});
+
+function addRecord(query)
+{
+
+	if(query == " "){
+		return ;
+	}
+
+	if(typeof(Storage)!=="undefined")
+	{
+		if (localStorage.getItem('record'))
+		{
+			console.log(localStorage.getItem('record') );
+			var str = query + ';' + localStorage.getItem('record');
+			localStorage.setItem('record', str );
+		} 
+		else
+		{
+			console.log(query );
+
+			localStorage.setItem('record', query );
+		}
+  // document.getElementById("result").innerHTML="You have clicked the button " + localStorage.clickcount + " time(s).";
+}
+else
+{
+	alert("Sorry, your browser does not support web storage...");
+}
+}
+
+
+</script>
+<script src="js/vendor/jquery.js"></script>
+
+<link rel="stylesheet" type="text/css" href="jquery-autocomplete/jquery.autocomplete.css" /><script type="text/javascript" src="jquery-autocomplete/jquery.autocomplete.js"></script>  
+<script>
+
+var autoSuggestion;
+
+$.getJSON( "sampleindex.php", 
+	function( data ) {
+
+		console.log(data);
+		autoSuggestion = data;
+  		$("#barSearch").autocomplete(autoSuggestion, {matchContains: true});  
+
+
+
+	});
+;  
 </script>
 </body>
 </html>
