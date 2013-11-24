@@ -3,14 +3,12 @@
 // This program provides a web interface to the Gopher search engine
 //
 // It serves on http://localhost.local:8081
-package ui
+package main
 
 import (
-	"fmt"
 	"gopher/search"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 func init() {
@@ -35,21 +33,15 @@ func main() {
 }
 
 func ServeSearchEngine(w http.ResponseWriter, r *http.Request) {
-	db := moneywire.NewConnection()
-	defer db.Close()
-
 	url := r.URL.Path
 	log.Println("Serving " + url)
 
-	fmt.Println(request)
-
 	switch url {
 	case "/search":
-		db.WriteKiosks(request, w)
 		query := r.FormValue("query")
-		search.respondToQuery(w, query)
+		search.RespondToQuery(w, query)
 	default:
-		http.ServeFile(w, r, "client"+url)
+		http.ServeFile(w, r, "."+url)
 	}
 
 }
