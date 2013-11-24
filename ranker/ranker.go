@@ -1,13 +1,13 @@
 package ranker
 
 type Ranker struct {
-
+	option int
 }
 
-func NewRanker(option) *Ranker {
-	
+func NewRanker(option int) *Ranker {
+	return &Ranker{option}
 }
 
-func (r *Ranker) search(query *Page) []*ResultPage {
-	
+func (r *Ranker) Search(query *Page) []*ResultPage {
+
 }
