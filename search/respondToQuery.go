@@ -20,11 +20,7 @@ func RespondToQuery(w io.Writer, q string) {
 	fmt.Fprintln(w, "[")
 
 	for _, result := range results {
-		encoder.Encode(
-			ranker.ResultPage{
-				Title: result.Title,
-			},
-		)
+		encoder.Encode(result)
 	}
 
 	fmt.Fprintln(w, "]")
