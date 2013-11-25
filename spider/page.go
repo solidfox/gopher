@@ -20,6 +20,7 @@ const (
 
 type positionList []int
 type Link struct {
+	Title      string
 	URL        string
 	AnchorText string
 }
@@ -31,17 +32,19 @@ type Page struct {
 	PageID    int64
 	words     map[string]*Word
 	wordCount int
-	links     []Link
+	links     []*Link
 	Size      int64
 	Title     string
 	URL       string
 	Modified  time.Time
+	Parents   []*Link
+	Children  []*Link
 	wordValid func(string) bool
 }
 
 var stopwords []string
 
-func defaultWordValidator() func(string) bool {
+func stopwordFilter() func(string) bool {
 	if len(stopwords) == 0 {
 		stopwordFile, _ := ioutil.ReadFile("stopwords.txt")
 		stopwords := sort.StringSlice(strings.Fields(string(stopwordFile)))
@@ -59,8 +62,8 @@ func NewPage() *Page {
 		PageID:    -1,
 		words:     make(map[string]*Word),
 		wordCount: 0,
-		links:     make([]Link, 0, DefaultLinksLength),
-		wordValid: defaultWordValidator(),
+		links:     make([]*Link, 0, DefaultLinksLength),
+		wordValid: stopwordFilter(),
 	}
 }
 
@@ -115,7 +118,7 @@ func (p *Page) AddLink(relativeURL string, text string) {
 	}
 	newURI := baseURI.ResolveReference(parsedRelativeURL)
 	if isValidHtmlLink(newURI.String()) {
-		p.links = append(p.links, Link{newURI.String(), text})
+		p.links = append(p.links, &Link{URL: newURI.String(), AnchorText: text})
 	}
 }
 
@@ -141,6 +144,6 @@ func (p *Page) Words() []*Word {
 	return wordSlice
 }
 
-func (p *Page) Links() []Link {
+func (p *Page) Links() []*Link {
 	return p.links
 }

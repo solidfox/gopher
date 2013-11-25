@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
-	"strings"
 )
 
 const (
@@ -38,6 +37,14 @@ const (
 	InsertLinkStmt = `
 	INSERT OR IGNORE INTO links 
 	VALUES (?, ?)`
+	GetParentsStmt = `
+	SELECT title, url 
+	FROM pageInfo INNER JOIN links ON pageInfo.pageID = links.parent
+	WHERE links.child = ?`
+	GetChildrenStmt = `
+	SELECT title, url 
+	FROM pageInfo INNER JOIN links ON pageInfo.pageID = links.child
+	WHERE links.parent = ?`
 )
 
 // func (rdb *RelationalDB) InsertLink(parent string, child string) {
@@ -100,7 +107,7 @@ func (rdb *RelationalDB) InsertPagesAndSetIDs(pages []*Page) {
 		row.Scan(&p.PageID)
 		for _, link := range p.Links() {
 			rdb.insertLink(insertLink, getPageId, insertPage, p.URL, link.URL)
-			//TODO remove links not in the page
+			//TODO update capability: remove links no longer in the page
 		}
 	}
 }
@@ -114,26 +121,63 @@ func (rdb *RelationalDB) PageByPageID(pageID int64) (p *Page) {
 // Uses the Page's PageID or URL to fill out all information about the page except the words it
 // contains (since those are not held in the relational db).
 func (rdb *RelationalDB) CompleteThePageInfoOf(pages []*Page) {
-	var links string
 	tx, _ := rdb.db.Begin()
+	defer tx.Commit()
 	getPagesByPageID, _ := tx.Prepare(GetPagesByPageIDStmt)
 	getPagesByURL, _ := tx.Prepare(GetPagesByURLStmt)
 	for _, p := range pages {
 		if p.PageID != -1 {
 			row := getPagesByPageID.QueryRow(p.PageID)
 			row.Scan(&p.PageID, &p.Size, &p.URL, &p.Modified, &p.Title)
-			linkSlice := strings.Fields(links)
-			for _, link := range linkSlice {
-				p.AddLink(link, "")
-			}
 		} else if len(p.URL) > 0 {
 			row := getPagesByURL.QueryRow(p.URL)
 			row.Scan(&p.PageID, &p.Size, &p.URL, &p.Modified, &p.Title)
-			linkSlice := strings.Fields(links)
-			for _, link := range linkSlice {
-				p.AddLink(link, "")
-			}
 		}
 	}
-	tx.Commit()
+}
+
+func (rdb *RelationalDB) LoadParentsFor(pages []*Page) {
+	parents := make([]*Link, 0, 10)
+	tx, _ := rdb.db.Begin()
+	defer tx.Commit()
+	getParents, _ := tx.Prepare(GetParentsStmt)
+	for _, p := range pages {
+		if p.PageID < 0 {
+			log.Println("RelationalDB.LoadParentsFor() requires passed pages to have PageIDs: ")
+			log.Fatalln(p)
+		}
+		rows, err := getParents.Query(p.PageID)
+		if err == nil {
+			log.Fatalln(err)
+		}
+		for rows.Next() {
+			link := &Link{}
+			rows.Scan(&link.Title, &link.URL)
+			parents = append(parents, link)
+			p.Parents = parents
+		}
+	}
+}
+
+func (rdb *RelationalDB) LoadChildrenFor(pages []*Page) {
+	children := make([]*Link, 0, 10)
+	tx, _ := rdb.db.Begin()
+	defer tx.Commit()
+	getChildren, _ := tx.Prepare(GetChildrenStmt)
+	for _, p := range pages {
+		if p.PageID < 0 {
+			log.Println("RelationalDB.LoadChildrenFor() requires passed pages to have PageIDs: ")
+			log.Fatalln(p)
+		}
+		rows, err := getChildren.Query(p.PageID)
+		if err == nil {
+			log.Fatalln(err)
+		}
+		for rows.Next() {
+			link := &Link{}
+			rows.Scan(&link.Title, &link.URL)
+			children = append(children, link)
+			p.Parents = children
+		}
+	}
 }
