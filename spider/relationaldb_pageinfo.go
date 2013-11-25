@@ -23,11 +23,11 @@ const (
 
 	InsertPageStmt = `
 	INSERT OR IGNORE INTO 'pageInfo' 
-	VALUES (NULL, ?, ?, ?, ?, ?)`
+	VALUES (NULL, ?, ?, ?, ?)`
 	UpdatePageStmt = `
 	UPDATE 'pageInfo' SET 
-		size = ?
-		modifiedDate = ?
+		size = ?,
+		modifiedDate = ?,
 		title = ?
 		WHERE url = ?`
 	GetPageIdStmt        = `SELECT pageID FROM pageInfo WHERE url = ?`
@@ -82,26 +82,35 @@ func (rdb *RelationalDB) insertLink(
 	insertLinkStmt.Exec(parentID, childID)
 }
 
+func checkErr(m string, err error) {
+	if err != nil {
+		log.Print(m + ": ")
+		log.Fatal(err)
+	}
+}
+
 func (rdb *RelationalDB) InsertPagesAndSetIDs(pages []*Page) {
 	tx, _ := rdb.db.Begin()
 	defer tx.Commit()
-	updatePage, _ := tx.Prepare(UpdatePageStmt)
-	insertPage, _ := tx.Prepare(InsertPageStmt)
-	getPageId, _ := tx.Prepare(GetPageIdStmt)
-	insertLink, _ := tx.Prepare(InsertLinkStmt)
+	updatePage, err := tx.Prepare(UpdatePageStmt)
+	checkErr("updatePage", err)
+	insertPage, err := tx.Prepare(InsertPageStmt)
+	checkErr("insertPage", err)
+	getPageId, err := tx.Prepare(GetPageIdStmt)
+	checkErr("getPageId", err)
+	insertLink, err := tx.Prepare(InsertLinkStmt)
+	checkErr("insertLink", err)
 
 	for _, p := range pages {
+		var err error
 		rdb.pageCache = p
 		res, err := updatePage.Exec(p.Size, p.Modified, p.Title, p.URL)
-		if err != nil {
-			log.Fatal(err)
-		}
+		checkErr("", err)
 		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			log.Fatal(err)
-		}
+		checkErr("", err)
 		if rowsAffected == 0 {
-			insertPage.Exec(p.Size, p.URL, p.Modified, p.Title)
+			_, err := insertPage.Exec(p.Size, p.URL, p.Modified, p.Title)
+			checkErr("", err)
 		}
 		row := getPageId.QueryRow(p.URL)
 		row.Scan(&p.PageID)
