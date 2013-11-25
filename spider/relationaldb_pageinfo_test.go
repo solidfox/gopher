@@ -30,5 +30,14 @@ func TestInsertPages(t *testing.T) {
 			t.Fail()
 		}
 	}
+}
+
+func TestCounters(t *testing.T) {
+	if rdb.PageCount() != 2 {
+		t.Fail()
+	}
+	if rdb.WordCount() != 0 {
+		t.Fail()
+	}
 	os.Remove(testdbfilename)
 }

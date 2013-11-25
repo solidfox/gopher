@@ -190,3 +190,10 @@ func (rdb *RelationalDB) LoadChildrenFor(pages []*Page) {
 		}
 	}
 }
+
+func (rdb *RelationalDB) PageCount() (count int) {
+	row := rdb.db.QueryRow(
+		"SELECT COUNT(PageID) FROM pageInfo")
+	row.Scan(&count)
+	return count
+}

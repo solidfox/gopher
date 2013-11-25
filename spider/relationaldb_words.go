@@ -61,3 +61,9 @@ func (rdb *RelationalDB) WordOf(wordID int) (word string) {
 	row.Scan(&word)
 	return word
 }
+
+func (rdb *RelationalDB) WordCount() (count int64) {
+	row := rdb.db.QueryRow("SELECT COUNT(word) FROM words")
+	row.Scan(&count)
+	return count
+}
