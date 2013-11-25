@@ -281,10 +281,25 @@ $('#toQueryHistory').click(function(){
 
 		var patt = / +/g;
 
-		$.each(data, function(index,value){
-			var sub = value.split(" ");
+		$.each(data, function(index,valueMother){
 
 			htmlstr += "<ul class='button-group'>";
+
+			// handle phrase
+			var phrase = valueMother.match(/\".+?\"/g);
+			if( phrase != null ){
+				$.each(phrase, function(index,value){
+
+					htmlstr += "<li><a href='#' class='history button [tiny small large]'>" + value + "</a></li>";
+
+					valueMother = valueMother.replace(value, "");
+
+				});
+			}
+
+			// get normal terms
+			var sub = valueMother.split(" ");
+
 			console.log(sub);
 
 			$.each(sub, function(index,value){
@@ -345,7 +360,7 @@ function writeToTable(data){
 	for( var i = 0 ; i < data.length; i++){
 
 		if( i >= 50) break;
-		
+
 		var keyword = data[i].keyword.toString();
 		keyword = keyword.replace(",", ' ');
 
