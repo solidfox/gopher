@@ -10,7 +10,8 @@
 			'score' => 12,
 			'title' => 'hihi',
 			'url' => 'http://lalala.com',
-			'lmd' => '10000000',
+			'modificationDate' => '10000000',
+			'descrip' => 'oh',
 			'size' => 12,
 			'keyword' => array(
 
@@ -20,13 +21,13 @@
 				),
 			'parent' => array(
 
-				'http://wht.com',
-				'http://oh.com'
+				array('url' =>'http://wht.com', 'title' =>'test'),
+				array('url' =>'http://wht.com', 'title' =>'test'),
 				),
 
 			'child' => array(
-				'http://lol.com',
-				'http://southpark.tv'
+				array('url' =>'http://wht.com', 'title' =>'test'),
+				array('url' =>'http://wht.com', 'title' =>'test'),
 				)
 
 
@@ -37,7 +38,8 @@
 			'score' => 10,
 			'title' => 'scrum',
 			'url' => 'http://Scrum.com',
-			'lmd' => '10000000',
+			'modificationDate' => '10000000',
+			'description' => 'wht',
 			'size' => 13,
 			'keyword' => array(
 
@@ -48,13 +50,13 @@
 
 			'parent' => array(
 
-				'http://wht.com',
-				'http://oh.com'
+				array('url' =>'http://wht.com', 'title' =>'test'),
+				array('url' =>'http://wht.com', 'title' =>'test'),
 				),
 
 			'child' => array(
-				'http://lol.com',
-				'http://southpark.tv'
+				array('url' =>'http://wht.com', 'title' =>'test'),
+				array('url' =>'http://wht.com', 'title' =>'test'),
 				)
 
 			)

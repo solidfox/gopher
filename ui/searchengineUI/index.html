@@ -369,7 +369,7 @@ function writeToTable(data){
 
 		htmlstr += "<td><h2><a src=\'" + data[i].url +"\'>" + data[i].title + '</a></h2>';
 		htmlstr += '<h3><small>' + data[i].url + '';
-		htmlstr += '<br>' + data[i].lmd + ', ' + data[i].size +'<br>';
+		htmlstr += '<br>' + data[i].modificationDate + ', ' + data[i].size +'<br>';
 		htmlstr += '</small></h3>';
 
 		htmlstr += '<h4><small>';
@@ -379,11 +379,11 @@ function writeToTable(data){
 
 		htmlstr += '<br>'
 		for( var j = 0 ; j < data[i].parent.length ; j++){
-			htmlstr += ''+ data[i].parent[j]  +'<br>'
+			htmlstr += ''+ data[i].parent[j].url  +'<br>'
 		}
 
 		for( var j = 0 ; j < data[i].child.length ; j++){
-			htmlstr += ''+ data[i].child[j]  +'<br>'
+			htmlstr += ''+ data[i].child[j].url  +'<br>'
 		}
 
 		htmlstr += '</small></h4></td></tr>';
