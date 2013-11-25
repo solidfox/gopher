@@ -20,9 +20,6 @@ func (rdb *RelationalDB) InsertWordsAndSetIDs(words []*Word) {
 			row := tx.QueryRow("SELECT wordID FROM words WHERE word = ?", w.Word)
 			row.Scan(&w.WordID)
 		}
-		// if i%1000 == 0 {
-		// 	fmt.Printf("We saved %v words\n", i)
-		// }
 	}
 	tx.Commit()
 }
