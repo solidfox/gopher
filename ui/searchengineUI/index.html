@@ -362,12 +362,12 @@ function writeToTable(data){
 		if( i >= 50) break;
 
 		var keyword = data[i].keyword.toString();
-		keyword = keyword.replace(",", ' ');
+		keyword = keyword.replace(/,/g, ' ');
 
 		htmlstr += '<tr><td><ul class="side-nav"><li class="active"><h3>Score: ' + data[i].score + '</h3><br><a ls=\'' + keyword + "\'class='sim' url=\'" + data[i].url +"\'>similar pages</a></li></ul></td>";
 
 
-		htmlstr += "<td><h2><a src=\'" + data[i].url +"\'>" + data[i].title + '</a></h2>';
+		htmlstr += "<td><h2><a href=\'" + data[i].url +"\'>" + data[i].title + '</a></h2>';
 		htmlstr += '<h3><small>' + data[i].url + '';
 		htmlstr += '<br>' + data[i].modificationDate + ', ' + data[i].size +'<br>';
 		htmlstr += '</small></h3>';
@@ -395,7 +395,6 @@ function writeToTable(data){
 	$(".sim").click(function(){
 
 		var query = $(this).attr('url');
-		addRecord(query);
 
 		console.log('similar!');
 
@@ -405,8 +404,10 @@ function writeToTable(data){
 		},
 		function( data ) {
     	// receive top five words of that page for requery
-    	var keyword = data.toString();
-    	keyword = keyword.replace(",", ' ');
+    	
+    	
+    	var keyword = data.toString().replace(/,/g, ' ');
+		addRecord(keyword);
 
     	reSearchFunc(keyword);
     });
