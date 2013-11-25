@@ -361,10 +361,16 @@ function writeToTable(data){
 
 		if( i >= 50) break;
 
-		var keyword = data[i].keyword.toString();
-		keyword = keyword.replace(/,/g, ' ');
 
-		htmlstr += '<tr><td><ul class="side-nav"><li class="active"><h3>Score: ' + data[i].score + '</h3><br><a ls=\'' + keyword + "\'class='sim' url=\'" + data[i].url +"\'>similar pages</a></li></ul></td>";
+		var keywords = '';
+		$.each(data[i].keywords, function(index, value){
+
+			keywords += value.word + " ";
+
+		});
+
+
+		htmlstr += '<tr><td><ul class="side-nav"><li class="active"><h3>Score: ' + data[i].score + "</h3><br><a class='sim' keys=\'" + keywords +"\'>similar pages</a></li></ul></td>";
 
 
 		htmlstr += "<td><h2><a href=\'" + data[i].url +"\'>" + data[i].title + '</a></h2>';
@@ -373,8 +379,8 @@ function writeToTable(data){
 		htmlstr += '</small></h3>';
 
 		htmlstr += '<h4><small>';
-		for( var j = 0 ; j < data[i].keyword.length ; j++){
-			htmlstr += ''+ data[i].keyword[j].word + ' ' + data[i].keyword[j].freq  +'; '
+		for( var j = 0 ; j < data[i].keywords.length ; j++){
+			htmlstr += ''+ data[i].keywords[j].word + ' ' + data[i].keywords[j].freq  +'; '
 		}
 
 		htmlstr += '<br>'
@@ -394,23 +400,25 @@ function writeToTable(data){
 
 	$(".sim").click(function(){
 
-		var query = $(this).attr('url');
+		var query = $(this).attr('keys');
 
-		console.log('similar!');
+		console.log('so ' +query);
+		addRecord(keywords);
 
-		$.getJSON( "samplesimilarpage.php", 
-		{
-			query: query
-		},
-		function( data ) {
-    	// receive top five words of that page for requery
+    	reSearchFunc(query);
+
+		// $.getJSON( "samplereply.php", 
+		// {
+		// 	query: query
+		// },
+		// function( data ) {
+  //   	// receive top five words of that page for requery
     	
     	
-    	var keyword = data.toString().replace(/,/g, ' ');
-		addRecord(keyword);
+  //   	var keywords = data.toString().replace(/,/g, ' ');
+		// addRecord(keywords);
 
-    	reSearchFunc(keyword);
-    });
+  //   });
 
 	});
 

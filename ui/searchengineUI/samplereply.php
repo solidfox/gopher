@@ -11,9 +11,8 @@
 			'title' => 'hihi',
 			'url' => 'http://lalala.com',
 			'modificationDate' => '10000000',
-			'descrip' => 'oh',
 			'size' => 12,
-			'keyword' => array(
+			'keywords' => array(
 
 				array('word'=> 'test',	'freq'=> 3),
 				array('word'=> 'baby',	'freq'=> 0)
@@ -39,9 +38,8 @@
 			'title' => 'scrum',
 			'url' => 'http://Scrum.com',
 			'modificationDate' => '10000000',
-			'description' => 'wht',
 			'size' => 13,
-			'keyword' => array(
+			'keywords' => array(
 
 				array('word'=> 'test',	'freq'=> 1),
 				array('word'=> 'baby',	'freq'=> 1)
