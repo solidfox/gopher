@@ -1,6 +1,7 @@
 package ranker
 
 import (
+	"fmt"
 	"gopher/spider"
 	"time"
 )
@@ -30,7 +31,9 @@ func NewRanker(option int) *Ranker {
 }
 
 func (r *Ranker) Search(query *spider.Page) []*ResultPage {
-	pageIDs := SearchingResult(query, r.option)
+	pageIDs, scores := SearchingResult(query)
+	fmt.Printf("\npageID: %v\n", pageIDs)
+	fmt.Printf("Score: %v\n", scores)
 	db := spider.NewRelationalDB("sqlite.db")
 	pages := make([]*spider.Page, len(pageIDs))
 	//resultPages := make([]*ResultPage, len(pageIDs))

@@ -41,7 +41,7 @@ func main() {
 	// }
 	db.Close()
 	//ranker.SearchingResult(testingPage, ranker.TFIDF)
-	myRanker := ranker.NewRanker(ranker.TFIDF)
+	myRanker := ranker.NewRanker(0)
 	myRanker.Search(testingPage)
 	elapsed = time.Since(start)
 	fmt.Printf("Time spent on main: %v\n", elapsed)

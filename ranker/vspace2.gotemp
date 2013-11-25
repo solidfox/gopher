@@ -46,7 +46,7 @@ func computeAveDocLen(pages []*spider.Page) {
 	AveDocLen = float64(TotalDocLen) / float64(len(pages))
 }
 
-func SearchingResult(query *spider.Page, option int) (resultDocIDs []int64) {
+func SearchingResult(query *spider.Page, option int) (resultDocIDs []int64, docResultsScores []float64) {
 	db := spider.NewDBM("DBM.db")
 	//get pages and inverted index
 	invertedindex := db.GetInvertedIndex()
@@ -132,7 +132,7 @@ func SearchingResult(query *spider.Page, option int) (resultDocIDs []int64) {
 				temp := GetTFIDF(page, allStoredPages, invertedTable, wordID)
 				docResults[index] += temp
 				//fmt.Printf("temp: %v\n", temp)
-				fmt.Printf("wordID: %v\n", wordID)
+				//fmt.Printf("wordID: %v\n", wordID)
 			}
 
 			//phase part
@@ -157,11 +157,11 @@ func SearchingResult(query *spider.Page, option int) (resultDocIDs []int64) {
 			docResults[index] = CosSim(page, allStoredPages, invertedTable, words, phases)
 		}
 	}
-	fmt.Printf("words:")
-	for _, word := range words {
+	// fmt.Printf("words:")
+	// for _, word := range words {
 
-		fmt.Printf("	%v", word.Word)
-	}
+	// 	fmt.Printf("	%v", word.Word)
+	// }
 
 	fmt.Printf("docResults: %v\n", docResults)
 	fmt.Printf("docIDs: %v\n", docIDs)
@@ -179,6 +179,7 @@ func SearchingResult(query *spider.Page, option int) (resultDocIDs []int64) {
 			//store result
 			if MaxScore > 0 {
 				resultDocIDs = append(resultDocIDs, docIDs[MaxIndex])
+				docResultsScores = append(docResultsScores, docResults[MaxIndex])
 			}
 			//remove max term
 			docResults = append(docResults[:MaxIndex], docResults[MaxIndex+1:]...)
