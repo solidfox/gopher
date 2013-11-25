@@ -8,7 +8,7 @@ Server response:
 	{
 		title:
 		url:
-		description:
+		keywords: [{word:,freq:}]
 		score:
 		modificationDate:
 		size:
@@ -18,7 +18,7 @@ Server response:
 	{
 		title:
 		url:
-		description:
+		keywords:
 		score:
 		modificationDate:
 		size:
