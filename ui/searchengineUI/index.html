@@ -26,7 +26,10 @@
 		<ul class="title-area">
 			<li class="name">
 				<h1><a id='backToFront' href="#">Home</a></h1>
+
 			</li>
+
+
 		</ul>
 
 		<section class="top-bar-section">
@@ -37,7 +40,7 @@
 				<li><a href="#" id='clearHistoryButton'>Clear History</a></li>
 
 				<!-- <li class="active"><a href="#">Right Nav Button Active</a></li> -->
-				<li class="has-dropdown">
+<!-- 				<li class="has-dropdown">
 					<a href="#">Other Features</a>
 					<ul class="dropdown">
 						<li><a id='toQueryHistory' href="#">Query History</a></li>
@@ -45,7 +48,7 @@
 
 					</ul>
 				</li>
-
+ -->
 
 			</ul>
 
@@ -56,13 +59,16 @@
 
 				<li class="has-form">
 					<div class="row collapse">
-						<div class="large-8 small-9 columns">
+												<li><a id='toQueryHistory' href="#">Query History</a></li>
+						<li><a id='toIndex' href="#">Our Index</a></li>
+
+<!-- 						<div class="large-8 small-9 columns">
 							<input id='barSearch' type="text" placeholder="Find Stuff">
 						</div>
 						<div class="large-4 small-3 columns">
 							<a href="#" id='barSearchButton' class="alert button expand">Search</a>
 						</div>
-					</div>
+ -->					</div>
 				</li>
 
 			</ul>
@@ -75,29 +81,25 @@
 
 
 
-	<div id='front' class="row">
+	<div class="row">
 
-		<div class="twelve columns">
+<!-- 		<div class="twelve columns">
 			<h2>Welcome to Gopher</h2>
 			<p>We are a small group of students from <strong> HKUST </strong> </p>
 			<p>Please enjoy! </p>
 			<hr />
 		</div>
-
+ -->
 
 		<form>
 			<fieldset>
-				<legend>Type something</legend>
+				<legend>Try Gopher!</legend>
 
 				<label></label>
 				<input id='frontSearch' type="text" placeholder="anything...">
 
+					<a href="#" id='frontSearchButton' class="small secondary button">Search</a>
 
-				<div class="four columns">
-					<a href="#" id='frontSearchButton' class="large secondary button">Search</a>
-
-
-				</div>
 
 <!-- 				<div class="four columns">
 					<a href="#" class="large secondary button">Lucky Draw!</a>
@@ -107,34 +109,41 @@
 
 	</form>
 
-</div>
-
-<div class='row' id='resultpage'>
-	<h3>Results</h3>
-
-	<div class="panel" id='resultPanel'>
+	<div id='front'>
+		<div class="panel" id='resultPanel'>
 
 
+		</div>
 	</div>
 </div>
 
+<!-- <div class='row' id='resultpage'>
 
-<div class='row' id='queryhistorypage'>
-	<h3>Results</h3>
+</div>
+ -->
 
-	<div class="panel" id='queryhistoryPanel'>
+<div class='row' id='queryhistorypage' style='display:none'>
 
+	<form>
+		<fieldset>
+			<legend>History!</legend>
 
-	</div>
+				<div  id='queryhistoryPanel'></div>
+			</fieldset>
+	</form>
+
 </div>
 
-<div class='row' id='indexpage'>
-	<h3>Index</h3>
+<div class='row' id='indexpage' style='display:none'>
+	<form>
+		<fieldset>
+			<legend>Index!</legend>
 
-	<div class="panel" id='indexPanel'>
+			<div  id='indexPanel'>		</div>
 
-
-	</div>
+		</fieldset>
+	</form>
+			
 </div>
 
 
@@ -196,7 +205,7 @@ $(document).foundation();
 
 var places = new Array();
 places.push('front');
-places.push('resultpage');
+// places.push('resultpage');
 places.push('queryhistorypage');
 places.push('indexpage');
 
@@ -210,7 +219,7 @@ function moveTo(position){
 
 	});
 
-	// console.log("ha" + position);
+	console.log("at " + position);
 	var str = '#' + position;
 	$(str).show();
 
@@ -235,9 +244,9 @@ $('#toIndex').click(function(){
 
 		function( data ) {
 
-		var htmlstr = "<form><fieldset><legend>Construct query using index</legend><label></label><input id='indexSearch' type='text' placeholder=''></input><div class='four columns'><a href='#' id='ReSearchButton' class='radius secondary button'>Search</a></div></fieldset></form><br>";
+		// var htmlstr = "<form><fieldset><legend>Construct query using index</legend><label></label><input id='indexSearch' type='text' placeholder=''></input><div class='four columns'><a href='#' id='ReSearchButton' class='radius secondary button'>Search</a></div></fieldset></form><br>";
 
-		htmlstr += "<div class='row'><div class='button-bar'>";
+		var htmlstr = "<div class='button-bar'>";
 
 		for( var i = 0 ; i < data.length; i++){
 			htmlstr += "<ul class='button-group'><li><a href='#' class='index button [tiny small large]'>" + data[i] + "</a></li></ul>";
@@ -248,17 +257,17 @@ $('#toIndex').click(function(){
 		$('#indexPanel').html(htmlstr);
 
 		$(".index").click(function(){
-			var str = $('#indexSearch').val() + " " + $(this).text();
-			$('#indexSearch').val(  str );
+			var str = $('#frontSearch').val() + " " + $(this).text();
+			$('#frontSearch').val(  str );
 		});
 
-		$("#ReSearchButton").click(function(){
+		// $("#frontSearchButton").click(function(){
 
-			var query =$('#indexSearch').val();
-			addRecord(query);
+		// 	var query =$('#frontSearch').val();
+		// 	addRecord(query);
 
-			reSearchFunc(query);
-		});
+		// 	reSearchFunc(query);
+		// });
 		moveTo('indexpage');
 
 	});
@@ -269,9 +278,9 @@ $('#toIndex').click(function(){
 
 $('#toQueryHistory').click(function(){
 
-		var htmlstr = "<form><fieldset><legend>Construct query using index</legend><label></label><input id='historySearch' type='text' placeholder=''></input><div class='four columns'><a href='#' id='historySearchButton' class='radius secondary button'>Search</a></div></fieldset></form><br>";
+		// var htmlstr = "<form><fieldset><legend>Construct query using index</legend><label></label><input id='historySearch' type='text' placeholder=''></input><div class='four columns'><a href='#' id='historySearchButton' class='radius secondary button'>Search</a></div></fieldset></form><br>";
 
-		htmlstr += "<div class='row'><div class='button-bar'>";
+		var	htmlstr = "<div class='row'><div class='button-bar'>";
 
 		// console.log(JSON.stringify(getQueryHistory()));
 		var a = getQueryHistory();
@@ -320,17 +329,17 @@ $('#toQueryHistory').click(function(){
 		$('#queryhistoryPanel').html(htmlstr);
 
 		$(".history").click(function(){
-			var str = $('#historySearch').val() + " " + $(this).text();
-			$('#historySearch').val(  str );
+			var str = $('#frontSearch').val() + " " + $(this).text();
+			$('#frontSearch').val(  str );
 		});
 
-		$("#historySearchButton").click(function(){
+		// $("#frontSearchButton").click(function(){
 
-			var query =$('#historySearch').val();
-			addRecord(query);
+		// 	var query =$('#frontSearch').val();
+		// 	addRecord(query);
 
-			reSearchFunc(query);
-		});
+		// 	reSearchFunc(query);
+		// });
 		moveTo('queryhistorypage');
 
 
@@ -342,14 +351,7 @@ $('#frontSearchButton').click(function(){
 	var query = $('#frontSearch').val();
 	console.log(query);
 	addRecord(query);
-	$.getJSON( "samplereply.php", 
-	{
-		query: query
-	},
-	function( data ) {
-		writeToTable(data);
-	});
-
+	reSearchFunc(query);
 });
 
 
@@ -422,7 +424,7 @@ function writeToTable(data){
 
 	});
 
-	moveTo('resultpage');
+	moveTo('front');
     Foundation.libs.forms.assemble();    
 
 
@@ -442,24 +444,24 @@ function reSearchFunc(query){
 }
 
 
-$('#barSearchButton').click(function(){
+// $('#barSearchButton').click(function(){
 
-	var query = $('#barSearch').val();
-	console.log(query);
-	addRecord(query);
+// 	var query = $('#barSearch').val();
+// 	console.log(query);
+// 	addRecord(query);
 
-    $.getJSON( "samplereply.php", 
-    {
-    	query: query
-    },
-
-
-    function( data ) {
-    	writeToTable(data);
-    });
+//     $.getJSON( "samplereply.php", 
+//     {
+//     	query: query
+//     },
 
 
-});
+//     function( data ) {
+//     	writeToTable(data);
+//     });
+
+
+// });
 
 
 moveTo('front');
@@ -533,7 +535,7 @@ $.getJSON( "sampleindex.php",
 
 		console.log(data);
 		autoSuggestion = data;
-  		$("#barSearch").autocomplete(autoSuggestion, {matchContains: true});  
+  		$("#frontSearch").autocomplete(autoSuggestion, {matchContains: true});  
 
 
 
