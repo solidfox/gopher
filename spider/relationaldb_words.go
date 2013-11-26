@@ -1,6 +1,7 @@
 package spider
 
 import (
+	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -68,13 +69,16 @@ func (rdb *RelationalDB) WordCount() (count int64) {
 	return count
 }
 
-func (rdb *RelationalDB) GetIndex() (words []*string) {
+func (rdb *RelationalDB) GetIndex() (words []string) {
 	row, _ := rdb.db.Query("SELECT word FROM words")
 
-	words = make([]*string, 0, 100)
+	fmt.Println("Entered GetIndex")
+
+	words = make([]string, 0, 100)
 	for row.Next() {
-		var word *string
-		row.Scan(word)
+		var word string
+		row.Scan(&word)
+		fmt.Println(word)
 		words = append(words, word)
 	}
 	return words
