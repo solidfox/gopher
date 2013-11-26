@@ -3,6 +3,8 @@ package ranker
 import (
 	"fmt"
 	"gopher/spider"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -18,7 +20,7 @@ type Link struct {
 type ResultPage struct {
 	Title            string
 	Url              string
-	Description      string
+	Keywords         []keyword
 	Score            float64
 	ModificationDate time.Time
 	Size             int64
@@ -26,12 +28,43 @@ type ResultPage struct {
 	Children         []*spider.Link
 }
 
+type keyword struct {
+	Word string
+	Freq int
+}
+
 func NewRanker(option int) *Ranker {
 	return &Ranker{option}
 }
 
 func (r *Ranker) Search(query *spider.Page) []ResultPage {
-	pageIDs, scores := SearchingResult(query)
+	pageIDs, scores, top5words := SearchingResult(query)
+	fmt.Print("Top 5 words:")
+	for _, str := range top5words {
+		fmt.Printf("   %v", str)
+	}
+	// var mykeyword []keyword
+	// for _, top5word := range top5words {
+	// 	tuples := strings.Split(top5word, ";")
+	// 	for _, tuple := range tuples {
+	// 		var tempkeyword keyword
+	// 		freqWordWithFreq := strings.Fields(tuple)
+	// 		if len(freqWordWithFreq) == 0 {
+	// 			tempkeyword.Word = ""
+	// 			tempkeyword.Freq = 0
+	// 		} else {
+	// 			tempkeyword.Word = freqWordWithFreq[0]
+	// 			integer, _ := strconv.ParseInt(freqWordWithFreq[1], 10, 64)
+	// 			tempkeyword.Freq = int(integer)
+
+	// 		}
+	// 		mykeyword = append(mykeyword, tempkeyword)
+	// 	}
+	// 	for _, tempkeyword := range mykeyword {
+	// 		fmt.Printf("keyword:%v  Freq:%v  \n", tempkeyword.Word, tempkeyword.Freq)
+	// 	}
+	// }
+
 	fmt.Printf("\npageID: %v\n", pageIDs)
 	fmt.Printf("Score: %v\n", scores)
 	db := spider.NewRelationalDB("sqlite.db")
@@ -45,9 +78,27 @@ func (r *Ranker) Search(query *spider.Page) []ResultPage {
 	results := make([]ResultPage, len(pages))
 
 	for i, page := range pages {
+
+		var mykeyword []keyword
+		tuples := strings.Split(top5words[i], ";")
+		for _, tuple := range tuples {
+			var tempkeyword keyword
+			freqWordWithFreq := strings.Fields(tuple)
+			if len(freqWordWithFreq) == 0 {
+				tempkeyword.Word = ""
+				tempkeyword.Freq = 0
+			} else {
+				tempkeyword.Word = freqWordWithFreq[0]
+				integer, _ := strconv.ParseInt(freqWordWithFreq[1], 10, 64)
+				tempkeyword.Freq = int(integer)
+
+			}
+			mykeyword = append(mykeyword, tempkeyword)
+		}
 		results[i] = ResultPage{
 			Title:            page.Title,
 			Url:              page.URL,
+			Keywords:         mykeyword,
 			Score:            scores[i],
 			ModificationDate: page.Modified,
 			Size:             page.Size,

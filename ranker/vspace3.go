@@ -28,7 +28,7 @@ func contain(list []int64, item int64) bool {
 	return false
 }
 
-func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []float64) {
+func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []float64, top5FreqWord []string) {
 	//query.wo
 
 	//storing page with TFIDF
@@ -95,6 +95,7 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 	Start := time.Now()
 	var scores []float64
 	var pageIDs []int64
+	var Freq5Word []string
 	QWords := query.Words()
 	// QWords[0].Word = "shuten" + " " + "doji"
 	// QWords = QWords[:2]
@@ -116,11 +117,13 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 		var dq float64 = 0.0
 		var dlen float64 = GetDLen(page)
 		var qlen float64 = float64(len(query.Words()))
-
+		var matchTitle bool = false
 		for _, querryWord := range QWords {
 			//str := querryWord.Word
 			words := page.myWord
-
+			if strings.Contains(page.Page.Title, "") {
+				matchTitle = true
+			}
 			str := querryWord.Word
 			if strings.Contains(str, " ") {
 				phaseterms := strings.Fields(str)
@@ -143,8 +146,33 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 				}
 			}
 		}
-		scores = append(scores, dq/dlen/qlen)
+		if matchTitle {
+			scores = append(scores, 2*dq/dlen/qlen)
+		} else {
+			scores = append(scores, dq/dlen/qlen)
+		}
+
 		pageIDs = append(pageIDs, page.Page.PageID)
+
+		var newStr string
+		//var newFreq string
+		Freqwords, Freqs := GetMostFreqWord(page.Page, 5)
+		for i := 0; i < 5; i++ {
+
+			newStr += Freqwords[i].Word + " " + strconv.Itoa(Freqs[i])
+			if i != 4 {
+				newStr += ";"
+			}
+		}
+
+		// for _, word := range Freqwords {
+		// 	newStr += word.Word + " "
+		// }
+		// for _, freq := range Freqs {
+		// 	newFreq += strconv.Itoa(freq) + ";"
+		// }
+		Freq5Word = append(Freq5Word, newStr)
+		//Freq5Word = append(Freq5Word, newFreq)
 	}
 
 	for _, word := range allPagesWithTFIDF[53-1].myWord {
@@ -177,9 +205,11 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 		} else {
 			resultScores = append(resultScores, maxValue)
 			resultPageIDs = append(resultPageIDs, pageIDs[maxIndex])
+			top5FreqWord = append(top5FreqWord, Freq5Word[maxIndex])
 		}
 		scores = append(scores[:maxIndex], scores[maxIndex+1:]...)
 		pageIDs = append(pageIDs[:maxIndex], pageIDs[maxIndex+1:]...)
+		Freq5Word = append(Freq5Word[:maxIndex], Freq5Word[maxIndex+1:]...)
 	}
 	elapse := time.Since(Start)
 	fmt.Printf("Time used in search=%v\n", elapse)
@@ -314,4 +344,29 @@ func containInt(list []int, item int) bool {
 		}
 	}
 	return false
+}
+
+func GetMostFreqWord(page *spider.Page, number int) (freqWords []spider.Word, freq []int) {
+	words := page.Words()
+	for i := 0; i < number; i++ {
+		//make sure it is not a empty array
+		if len(words) > 0 {
+			MaxTermFreq := words[0].TF()
+			MaxIndex := 0
+			//find max TF word
+			for index, word := range words {
+				if word.TF() > MaxTermFreq {
+					MaxIndex = index
+					MaxTermFreq = word.TF()
+				}
+			}
+			//put into result
+			freqWords = append(freqWords, *words[MaxIndex])
+			freq = append(freq, MaxTermFreq)
+			//remove max term from the list
+			words = append(words[:MaxIndex], words[MaxIndex+1:]...)
+		}
+	}
+
+	return
 }
