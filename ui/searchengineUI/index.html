@@ -240,9 +240,15 @@ $('#backToFront').click(function(){
 // click action of container to toggle timer disabled (timer remains)
 $('#toIndex').click(function(){
 
-	$.getJSON( "sampleindex.php", 
+	// $.getJSON( "sampleindex.php", 
 
-		function( data ) {
+
+	$.ajax({
+		
+		type : "POST",
+		url :"/index",
+
+		success: function( data ) {
 
 		// var htmlstr = "<form><fieldset><legend>Construct query using index</legend><label></label><input id='indexSearch' type='text' placeholder=''></input><div class='four columns'><a href='#' id='ReSearchButton' class='radius secondary button'>Search</a></div></fieldset></form><br>";
 
@@ -269,6 +275,7 @@ $('#toIndex').click(function(){
 		// 	reSearchFunc(query);
 		// });
 		moveTo('indexpage');
+		}
 
 	});
 
@@ -432,14 +439,53 @@ function writeToTable(data){
 
 function reSearchFunc(query){
 
-    $.getJSON( "samplereply.php", 
-    {
-    	query: query
-    },
 
-    function( data ) {
-    	writeToTable(data);
+
+	// preprocess the query
+	var patt = / +/g;
+
+	var queryArray = new Array();
+
+	// handle phrase
+	var phrase = query.match(/\".+?\"/g);
+	if( phrase != null ){
+		$.each(phrase, function(index,value){
+
+			queryArray.push(value.replace(/\"/g,""));
+			query = query.replace(value, "");
+
+		});
+	}
+
+	// get normal terms
+	var sub = query.split(" ");
+
+	$.each(sub, function(index,value){
+
+		if( value.trim() != "" ){  
+			queryArray.push(value);
+		}
 	});
+
+
+
+
+	$.ajax({
+		type :"POST",
+		url : "/api",
+		data : JSON.stringify(queryArray),
+		success : function( data ) {
+    		writeToTable(data);
+		}
+
+	});
+
+//     $.getJSON( "samplereply.php", 
+//     {
+//     	query: query
+//     },
+
+// );
 
 }
 
@@ -530,16 +576,21 @@ else
 
 var autoSuggestion;
 
-$.getJSON( "sampleindex.php", 
-	function( data ) {
+// $.getJSON( "sampleindex.php", 
+
+$.ajax({
+	type :"POST",
+	url : "/index",
+	success:	function( data ) {
 
 		console.log(data);
 		autoSuggestion = data;
-  		$("#frontSearch").autocomplete(autoSuggestion, {matchContains: true});  
+  		$("#frontSearch").autocomplete(autoSuggestion, {matchContains: true});
+  		}  
 
+};
 
-
-	});
+	// });
 ;  
 </script>
 </body>

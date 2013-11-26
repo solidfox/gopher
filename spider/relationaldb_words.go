@@ -68,8 +68,13 @@ func (rdb *RelationalDB) WordCount() (count int64) {
 	return count
 }
 
-func (rdb *RelationalDB) GetIndex() (words []*Word) {
-	row := rdb.db.QueryRow("SELECT word FROM words")
-	row.Scan(&words)
+func (rdb *RelationalDB) GetIndex() (words []*string) {
+	row, _ := rdb.db.Query("SELECT word FROM words")
+
+	words = make([]string, 100)
+	for row.Next() {
+		row.Scan(&words)
+
+	}
 	return words
 }
