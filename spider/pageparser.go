@@ -167,7 +167,8 @@ func newTimeoutClient(connectTimeout time.Duration, readWriteTimeout time.Durati
 func parsePage(pageUrl string, dns *dnsCache) *Page {
 	client := newTimeoutClient(ConnectTimeout*time.Second, ReadWriteTimeout*time.Second)
 	// log.Println(" " + pageUrl + " pre")
-	res, err := client.Get(dns.lookupURL(pageUrl))
+	ipURL := dns.lookupURL(pageUrl)
+	res, err := client.Get(ipURL)
 	// log.Println(" " + pageUrl + " post")
 	if err != nil {
 		//log.Println(err)
