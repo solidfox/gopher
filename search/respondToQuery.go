@@ -35,11 +35,11 @@ func RespondToIndex(w io.Writer, q string) {
 	results := r.GetIndex()
 
 	encoder := json.NewEncoder(w)
-	fmt.Fprintln(w, "[")
+	// fmt.Fprintln(w, "[")
 
-	for _, result := range results {
-		encoder.Encode(result)
-	}
+	// for _, result := range results {
+	encoder.Encode(result)
+	// }
 
-	fmt.Fprintln(w, "]")
+	// fmt.Fprintln(w, "]")
 }
