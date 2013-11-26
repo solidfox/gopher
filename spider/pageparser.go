@@ -89,7 +89,7 @@ func Get30Pages() []*Page {
 }
 
 func Get300Pages() []*Page {
-	pages := make([]*Page, 300)
+	pages := make([]*Page, 100)
 	pageChannel := GetPages()
 	for i, _ := range pages {
 		pages[i] = <-pageChannel
