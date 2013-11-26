@@ -238,6 +238,8 @@ $('#backToFront').click(function(){
 // bullets disabled
 // right left arrow disabled
 // click action of container to toggle timer disabled (timer remains)
+
+var exporse2
 $('#toIndex').click(function(){
 
 	// $.getJSON( "sampleindex.php", 
@@ -250,6 +252,9 @@ $('#toIndex').click(function(){
 
 		success: function( data ) {
 
+		exporse2 = data
+
+		data = JSON.parse(data)
 		// var htmlstr = "<form><fieldset><legend>Construct query using index</legend><label></label><input id='indexSearch' type='text' placeholder=''></input><div class='four columns'><a href='#' id='ReSearchButton' class='radius secondary button'>Search</a></div></fieldset></form><br>";
 
 		var htmlstr = "<div class='button-bar'>";
@@ -392,23 +397,23 @@ function writeToTable(data){
 		htmlstr += '<br>' + data[i].ModificationDate + ', ' + data[i].Size +'<br>';
 		htmlstr += '</small></h3>';
 
-		htmlstr += '<h4><small>';
+		htmlstr += '<small>';
 		// for( var j = 0 ; j < data[i].keywords.length ; j++){
 		// 	htmlstr += ''+ data[i].keywords[j].Word + ' ' + data[i].keywords[j].Freq  +'; '
 		// }
 
-		htmlstr += 'parent:<br>'
+		htmlstr += '<h3>Parents</h3><p>'
 		for( var j = 0 ; j < data[i].Parents.length ; j++){
 			htmlstr += data[i].Parents[j].Title + ' '+ data[i].Parents[j].URL  +'<br>'
 		}
 
-		htmlstr += "children:<br>"
+		htmlstr += "</p><h3>Children</h3><p>"
 
 		for( var j = 0 ; j < data[i].Children.length ; j++){
 			htmlstr += data[i].Children[j].Title + ' '+ data[i].Children[j].URL  +'<br>'
 		}
 
-		htmlstr += '</small></h4></td></tr>';
+		htmlstr += '</p></small></td></tr>';
 	}
 
 	htmlstr += '</tbody></table>';
