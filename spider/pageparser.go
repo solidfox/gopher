@@ -171,10 +171,10 @@ func parsePage(pageUrl string, dns *dnsCache) *Page {
 	res, err := client.Get(ipURL)
 	// log.Println(" " + pageUrl + " post")
 	if err != nil {
-		//log.Println(err)
+		log.Println(err)
 		return nil
 	} else if res.StatusCode != 200 {
-		//log.Println(res)
+		log.Println(res)
 		return nil
 	}
 	// res.Body != nil when err == nil
