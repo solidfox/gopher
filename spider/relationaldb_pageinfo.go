@@ -8,44 +8,47 @@ import (
 
 const (
 	CreatePageInfoTableStmt = `
-	CREATE TABLE pageInfo (
-		pageID 			INTEGER PRIMARY KEY AUTOINCREMENT,
-		size 			INTEGER,
-		url 			TEXT UNIQUE,
-		modifiedDate 	DATETIME,
-		title 			TEXT,
-		tfmax 			INTEGER
-	)`
+		CREATE TABLE pageInfo (
+			pageID 			INTEGER PRIMARY KEY AUTOINCREMENT,
+			size 			INTEGER,
+			url 			TEXT UNIQUE,
+			modifiedDate 	DATETIME,
+			title 			TEXT,
+			tfmax 			INTEGER,
+			vectorLength 	NUMERIC
+		)`
 	CreateLinksTableStmt = `
-	CREATE TABLE links (
-		parent		INTEGER REFERENCES pageInfo(pageID),
-		child		INTEGER REFERENCES pageInfo(pageID),
-		UNIQUE(parent, child))`
+		CREATE TABLE links (
+			parent		INTEGER REFERENCES pageInfo(pageID),
+			child		INTEGER REFERENCES pageInfo(pageID),
+			UNIQUE(parent, child))`
 
 	InsertPageStmt = `
-	INSERT OR IGNORE INTO 'pageInfo' 
-	VALUES (NULL, ?, ?, ?, ?)`
+		INSERT OR IGNORE INTO 'pageInfo' 
+		VALUES (NULL, ?, ?, ?, ?, ?, ?)`
 	UpdatePageStmt = `
-	UPDATE 'pageInfo' SET 
-		size = ?,
-		modifiedDate = ?,
-		title = ?
+		UPDATE 'pageInfo' SET 
+			size 			= ?,
+			modifiedDate 	= ?,
+			title 			= ?,
+			tfmax 			= ?,
+			vectorLength 	= ?
 		WHERE url = ?`
 	GetPageIdStmt        = `SELECT pageID FROM pageInfo WHERE url = ?`
 	GetPagesByPageIDStmt = `SELECT * FROM pageInfo WHERE pageID = ?`
 	GetPagesByURLStmt    = `SELECT * FROM pageInfo WHERE url = ?`
 
 	InsertLinkStmt = `
-	INSERT OR IGNORE INTO links 
-	VALUES (?, ?)`
+		INSERT OR IGNORE INTO links 
+		VALUES (?, ?)`
 	GetParentsStmt = `
-	SELECT title, url 
-	FROM pageInfo INNER JOIN links ON pageInfo.pageID = links.parent
-	WHERE links.child = ?`
+		SELECT title, url 
+		FROM pageInfo INNER JOIN links ON pageInfo.pageID = links.parent
+		WHERE links.child = ?`
 	GetChildrenStmt = `
-	SELECT title, url 
-	FROM pageInfo INNER JOIN links ON pageInfo.pageID = links.child
-	WHERE links.parent = ?`
+		SELECT title, url 
+		FROM pageInfo INNER JOIN links ON pageInfo.pageID = links.child
+		WHERE links.parent = ?`
 )
 
 // func (rdb *RelationalDB) InsertLink(parent string, child string) {
@@ -86,7 +89,7 @@ func (rdb *RelationalDB) insertLink(
 func checkErr(m string, err error) {
 	if err != nil {
 		log.Print(m + ": ")
-		log.Fatal(err)
+		panic(err)
 	}
 }
 
@@ -105,12 +108,12 @@ func (rdb *RelationalDB) InsertPagesAndSetIDs(pages []*Page) {
 	for _, p := range pages {
 		var err error
 		rdb.pageCache = p
-		res, err := updatePage.Exec(p.Size, p.Modified, p.Title, p.URL, p.TFMax)
+		res, err := updatePage.Exec(p.Size, p.Modified, p.Title, p.TFMax, p.VectorLength(), p.URL)
 		checkErr("", err)
 		rowsAffected, err := res.RowsAffected()
 		checkErr("", err)
 		if rowsAffected == 0 {
-			_, err := insertPage.Exec(p.Size, p.URL, p.Modified, p.Title, p.TFMax)
+			_, err := insertPage.Exec(p.Size, p.URL, p.Modified, p.Title, p.TFMax, p.VectorLength())
 			checkErr("", err)
 		}
 		row := getPageId.QueryRow(p.URL)
@@ -136,13 +139,13 @@ func (rdb *RelationalDB) CompleteThePageInfoOf(pages []*Page) {
 	getPagesByPageID, _ := tx.Prepare(GetPagesByPageIDStmt)
 	getPagesByURL, _ := tx.Prepare(GetPagesByURLStmt)
 	for _, p := range pages {
-		var row sql.Row
+		var row *sql.Row
 		if p.PageID != -1 {
-			row := getPagesByPageID.QueryRow(p.PageID)
+			row = getPagesByPageID.QueryRow(p.PageID)
 		} else if len(p.URL) > 0 {
-			row := getPagesByURL.QueryRow(p.URL)
+			row = getPagesByURL.QueryRow(p.URL)
 		}
-		row.Scan(&p.PageID, &p.Size, &p.URL, &p.Modified, &p.Title, &p.TFMax)
+		row.Scan(&p.PageID, &p.Size, &p.URL, &p.Modified, &p.Title, &p.TFMax, &p.vectorLength)
 	}
 }
 
@@ -192,7 +195,7 @@ func (rdb *RelationalDB) LoadChildrenFor(pages []*Page) {
 	}
 }
 
-func (rdb *RelationalDB) PageCount() (count int) {
+func (rdb *RelationalDB) PageCount() (count int64) {
 	row := rdb.db.QueryRow(
 		"SELECT COUNT(PageID) FROM pageInfo")
 	row.Scan(&count)

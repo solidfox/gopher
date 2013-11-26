@@ -6,6 +6,7 @@ package spider
 import (
 	"gopher/stemmer"
 	"io/ioutil"
+	"math"
 	"net/url"
 	"regexp"
 	"sort"
@@ -16,6 +17,7 @@ import (
 const (
 	DefaultPositionsLength = 10
 	DefaultLinksLength     = 10
+	DefaultWordsLength     = 10
 )
 
 type positionList []int
@@ -29,20 +31,36 @@ type Link struct {
 // Size is the size of the page in bytes.
 // Modified is the Last-Modified field or Date field of the page's http header.
 type Page struct {
-	PageID    int64
-	words     map[string]*Word
-	wordCount int
-	links     []*Link
-	Size      int64
-	Title     string
-	URL       string
-	Modified  time.Time
-	Parents   []*Link
-	Children  []*Link
-	wordValid func(string) bool
+	PageID       int64
+	wordMap      map[string]*Word
+	words        []*Word
+	vectorLength float64
+	wordCount    int
+	links        []*Link
+	TFMax        int
+	Size         int64
+	Title        string
+	URL          string
+	Modified     time.Time
+	Parents      []*Link
+	Children     []*Link
+	wordValid    func(string) bool
 }
 
 var stopwords []string
+
+func (p *Page) VectorLength() float64 {
+	if p.vectorLength != 0 {
+		return p.vectorLength
+	}
+
+	sum := int64(0)
+	for _, word := range p.words {
+		tf := int64(word.TF())
+		sum += tf * tf
+	}
+	return math.Sqrt(float64(sum))
+}
 
 func stopwordFilter() func(string) bool {
 	if len(stopwords) == 0 {
@@ -60,11 +78,33 @@ func stopwordFilter() func(string) bool {
 func NewPage() *Page {
 	return &Page{
 		PageID:    -1,
-		words:     make(map[string]*Word),
+		wordMap:   make(map[string]*Word),
+		words:     make([]*Word, 0, DefaultWordsLength),
 		wordCount: 0,
 		links:     make([]*Link, 0, DefaultLinksLength),
 		wordValid: stopwordFilter(),
 	}
+}
+
+func (p *Page) getWord(wordString string) *Word {
+	if len(p.wordMap) == len(p.words) {
+		word, exists := p.wordMap[wordString]
+		if exists {
+			return word
+		}
+	} else {
+		for _, word := range p.words {
+			if word.Word == wordString {
+				return word
+			}
+		}
+	}
+	return NewWord("")
+}
+
+func (p *Page) TFxIDF(wordString string, df int, n int64) float64 {
+	tf := float64(p.getWord(wordString).TF())
+	return tf * math.Log2(float64(n)/float64(df))
 }
 
 // Sequentially adds word to the list of words for the page.
@@ -81,22 +121,43 @@ func (p *Page) addWordFromText(word string) {
 		return
 	}
 	word = string(stemmer.Stem([]byte(word)))
+	p.addWordControlled(word)
+}
 
-	wordObj, exists := p.words[word]
+func (p *Page) initWordMap() {
+	for _, word := range p.words {
+		p.wordMap[word.Word] = word
+	}
+}
+
+func (p *Page) addWordControlled(word string) {
+	if len(p.words) != 0 && len(p.wordMap) == 0 {
+		p.initWordMap()
+	} else if len(p.words) != len(p.wordMap) {
+		panic("Page is in an illegal state; wordMap out of sync")
+	}
+	wordObj, exists := p.wordMap[word]
 	position := p.wordCount + 1
 	if !exists {
 		wordObj = NewWord(word)
+		p.words = append(p.words, wordObj)
 	}
 	wordObj.positions = append(wordObj.positions, position)
-	p.words[word] = wordObj
+	if wordObj.TF() > p.TFMax {
+		p.TFMax = wordObj.TF()
+	}
+	p.wordMap[word] = wordObj
 	p.wordCount++
 }
 
-// A
-func (p *Page) AddWords(words []*Word) {
-	for _, word := range words {
-		p.words[word.Word] = word
-	}
+// Set words without controlling for duplicates
+func (p *Page) SetWords(words []*Word) {
+	p.words = words
+}
+
+// Add word without controlling for duplicates
+func (p *Page) AddWord(word *Word) {
+	p.words = append(p.words, word)
 }
 
 // Adds all words in the text, separated by any match of "[[:space:][:punct:][:cntrl:]]+"
@@ -134,14 +195,7 @@ func isValidHtmlLink(link string) bool {
 }
 
 func (p *Page) Words() []*Word {
-	n := len(p.words)
-	wordSlice := make([]*Word, n)
-	i := 0
-	for _, wordObj := range p.words {
-		wordSlice[i] = wordObj
-		i++
-	}
-	return wordSlice
+	return p.words
 }
 
 func (p *Page) Links() []*Link {
