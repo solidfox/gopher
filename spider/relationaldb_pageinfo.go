@@ -13,8 +13,7 @@ const (
 		size 			INTEGER,
 		url 			TEXT UNIQUE,
 		modifiedDate 	DATETIME,
-		title 			TEXT,
-		tfmax 			INTEGER
+		title 			TEXT
 	)`
 	CreateLinksTableStmt = `
 	CREATE TABLE links (
@@ -105,12 +104,12 @@ func (rdb *RelationalDB) InsertPagesAndSetIDs(pages []*Page) {
 	for _, p := range pages {
 		var err error
 		rdb.pageCache = p
-		res, err := updatePage.Exec(p.Size, p.Modified, p.Title, p.URL, p.TFMax)
+		res, err := updatePage.Exec(p.Size, p.Modified, p.Title, p.URL)
 		checkErr("", err)
 		rowsAffected, err := res.RowsAffected()
 		checkErr("", err)
 		if rowsAffected == 0 {
-			_, err := insertPage.Exec(p.Size, p.URL, p.Modified, p.Title, p.TFMax)
+			_, err := insertPage.Exec(p.Size, p.URL, p.Modified, p.Title)
 			checkErr("", err)
 		}
 		row := getPageId.QueryRow(p.URL)
@@ -136,13 +135,13 @@ func (rdb *RelationalDB) CompleteThePageInfoOf(pages []*Page) {
 	getPagesByPageID, _ := tx.Prepare(GetPagesByPageIDStmt)
 	getPagesByURL, _ := tx.Prepare(GetPagesByURLStmt)
 	for _, p := range pages {
-		var row sql.Row
+		var row *sql.Row
 		if p.PageID != -1 {
-			row := getPagesByPageID.QueryRow(p.PageID)
+			row = getPagesByPageID.QueryRow(p.PageID)
 		} else if len(p.URL) > 0 {
-			row := getPagesByURL.QueryRow(p.URL)
+			row = getPagesByURL.QueryRow(p.URL)
 		}
-		row.Scan(&p.PageID, &p.Size, &p.URL, &p.Modified, &p.Title, &p.TFMax)
+		row.Scan(&p.PageID, &p.Size, &p.URL, &p.Modified, &p.Title)
 	}
 }
 

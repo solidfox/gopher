@@ -51,6 +51,7 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 
 	var allPagesWithTFIDF []SPage
 	//compute allPagesWithTFIDF
+	fmt.Printf("Document number in allstoredpage:%v", len(allStoredPages))
 	for _, page := range allStoredPages {
 		var tempPage SPage
 		tempPage.Page = page
@@ -69,7 +70,7 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 				//fmt.Printf("'%v' is word in the db with 0 DF", word.Word)
 				tempWord.TFIDF = 0
 			} else {
-				tempWord.TFIDF = (TF / MaxTF) * math.Log(N/DF)
+				tempWord.TFIDF = (TF / MaxTF) * math.Log2(N/DF)
 			}
 			tempPage.myWord = append(tempPage.myWord, tempWord)
 		}
@@ -95,8 +96,11 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 	var scores []float64
 	var pageIDs []int64
 	QWords := query.Words()
-	QWords[0].Word = "kwun" + " " + "chiu"
-	QWords = QWords[:]
+	QWords[0].Word = "shuten" + " " + "doji"
+	QWords = QWords[:2]
+	for _, word := range QWords {
+		fmt.Printf("Qword:%v\n", word.Word)
+	}
 	// for _, page := range allStoredPages {
 	// 	str := QWords[0].Word
 	// 	if strings.Contains(str, " ") {
@@ -124,9 +128,10 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 				temp := GetTFIDFPhased(page.Page, allStoredPages, invertedTable, phaseterms)
 
 				dq += temp
-				// if temp != 0 {
-				// 	fmt.Printf("temp: %v\n", temp)
-				// }
+				if temp != 0 {
+					fmt.Printf("temp: %v\n", temp)
+					fmt.Printf("Page with phased:%v\n", page.Page.URL)
+				}
 
 			}
 
@@ -134,6 +139,7 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 			for _, word := range words {
 				if querryWord.Word == word.Word.Word {
 					dq += word.TFIDF * 1
+					//fmt.Print("notPhase")
 				}
 			}
 		}
@@ -141,8 +147,15 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 		pageIDs = append(pageIDs, page.Page.PageID)
 	}
 
-	// fmt.Printf("pageIDs:%v    ", pageIDs)
-	// fmt.Printf("scores:%v\n", scores)
+	for _, word := range allPagesWithTFIDF[53-1].myWord {
+		if word.Word.Word == "demon" {
+			fmt.Printf("str: %v", word.Word.Word)
+		}
+
+	}
+	fmt.Printf("\n%v\n", allPagesWithTFIDF[53-1].Page.URL)
+	fmt.Printf("pageIDs:%v    ", pageIDs)
+	fmt.Printf("scores:%v\n", scores)
 
 	// for _, word := range query.Words() {
 	// 	fmt.Printf("querry words:%v\n", word.Word)
@@ -276,16 +289,20 @@ func GetTFIDFPhased(page *spider.Page, allStoredPages []*spider.Page, invertedTa
 	}
 	N := float64(len(allStoredPages))
 	df := GetDFPhased(allStoredPages, phaseterms)
+
 	//k1 := 2.0
 	//b := 0.75
 	//firstTerm := (math.Log((N - df + 0.5) / (df + 0.5)))
 	//secondTerm := ((k1 + 1) * TF / ((k1*(1-b) + b*docLen/AveDocLen) + TF))
 	MaxTF := GetMaxTF(page)
-	// if TF > 0 {
-	// 	fmt.Print("TF >0")
-	// }
+	if MaxTF > 0 {
+		//fmt.Print("TF >0")
+	}
+	if MaxTF <= 0 || df <= 0 {
+		return 0
+	}
 	firstTerm := TF / MaxTF
-	secondTerm := math.Log(N / df)
+	secondTerm := math.Log2(N / df)
 
 	return firstTerm * secondTerm
 }

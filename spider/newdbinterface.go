@@ -12,6 +12,149 @@ import (
 	"time"
 )
 
+var TotalDocLen float64 = 0
+var o = &dbm.Options{}
+
+type DBM struct {
+	db *dbm.DB
+}
+
+func NewDBM(name string) (d *DBM) {
+	mydb := dbConnect(name)
+
+	d = &DBM{
+		mydb,
+	}
+	return d
+}
+
+const DBMname = "DBM.db"
+
+func (d *DBM) storePages(pages []*Page) {
+	//Relational DB
+	relationalDb := NewRelationalDB("sqlite.db")
+	relationalDb.InsertPagesAndSetIDs(pages)
+	for _, page := range pages {
+		fmt.Printf("%v\n", page.PageID)
+	}
+	mydb := d.db
+	//init
+	//forwardtable
+	fowardtable, err := mydb.Array("fowardtable")
+	if err != nil {
+		fmt.Printf("Error:forwardtable disconnected")
+		panic(err)
+	}
+	//invertedtable
+	// invertedtable, err := mydb.Array("invertedtable")
+	// if err != nil {
+	// 	fmt.Errorf("Error:invertedtable disconnected")
+	// }
+
+	//invertedtable map
+	// invertedindex := make(map[int]string)
+	//storing for each page
+	for _, page := range pages {
+		//forwardtable
+		key := page.PageID
+		words := page.Words()
+		relationalDb.InsertWordsAndSetIDs(words)
+		var value string
+		for _, word := range words {
+			value += strconv.Itoa(word.WordID) + " " + strconv.Itoa(word.TF())
+			positions := word.Positions()
+			for _, pos := range positions {
+				value += " " + strconv.Itoa(pos)
+			}
+			value = value + ";"
+		}
+		//put forwardtable in db
+		fowardtable.Set(value, key)
+
+		//invertedtable
+		// for _, word := range words {
+		// 	if invertedindex[word.WordID] == "" {
+		// 		invertedindex[word.WordID] += strconv.FormatInt(page.PageID, 10)
+		// 	} else {
+		// 		invertedindex[word.WordID] += "" + strconv.FormatInt(page.PageID, 10)
+		// 	}
+		// }
+
+	}
+	//put invertedtable in db
+	// for wordId, resultstr := range invertedindex {
+	// 	invertedtable.Set(resultstr, wordId)
+	// }
+	relationalDb.Close()
+	mydb.Close()
+}
+
+func (d *DBM) StorePages2(pages []*Page) {
+	//fmt.Printf("numofpagestored%v\n", len(pages))
+	//Relational DB
+	relationalDb := NewRelationalDB("sqlite.db")
+	relationalDb.InsertPagesAndSetIDs(pages)
+	// for _, page := range pages {
+	// 	fmt.Printf("%v\n", page.PageID)
+	// }
+	mydb := d.db
+	//init
+	//forwardtable
+	fowardtable, err := mydb.Array("fowardtable")
+	if err != nil {
+		fmt.Printf("Error:forwardtable disconnected")
+		panic(err)
+	}
+
+	//invertedtable
+	invertedtable, err := mydb.Array("invertedtable")
+	if err != nil {
+		fmt.Printf("Error:invertedtable disconnected")
+		panic(err)
+	}
+
+	//invertedtable map
+	invertedindex := make(map[int]string)
+
+	//fowardtable.Set("value", "key")
+	for _, page := range pages {
+		//forwardtable
+		key := page.PageID
+		words := page.Words()
+		relationalDb.InsertWordsAndSetIDs(words)
+		var value string = ""
+		//fmt.Printf("numofwordinonepage:%v\n", len(words))
+		for _, word := range words {
+			value += strconv.Itoa(word.WordID) + " " + strconv.Itoa(word.TF())
+			positions := word.Positions()
+			for _, pos := range positions {
+				value += " " + strconv.Itoa(pos)
+			}
+			value = value + ";"
+			//fmt.Printf("%v		", value)
+		}
+		fowardtable.Set(value, key)
+		// input, _ := fowardtable.Get(key)
+		// fmt.Printf("Input: %v\n", input)
+
+		//invertedtable
+		for _, word := range words {
+			if invertedindex[word.WordID] == "" {
+				invertedindex[word.WordID] += strconv.FormatInt(page.PageID, 10)
+			} else {
+				invertedindex[word.WordID] += ";" + strconv.FormatInt(page.PageID, 10)
+			}
+		}
+
+	}
+	for key, value := range invertedindex {
+		invertedtable.Set(value, key)
+	}
+
+	relationalDb.Close()
+	//mydb.Close()
+}
+
 func (d *DBM) getPages() (pages []*Page) {
 	relationalDb := NewRelationalDB("sqlite.db")
 	mydb := d.db
@@ -248,8 +391,42 @@ func dbConnect(name string) *dbm.DB {
 	return nil
 }
 
-func (d *DBM) Getdf(wordId int) (df int) {
-	df = 0
+func (d *DBM) GetWordNumber() (score int64) {
+	var wordN string
+	relationalDb := NewRelationalDB("sqlite.db")
+	row := relationalDb.db.QueryRow(
+		"SELECT COUNT(word) FROM words")
+	row.Scan(&wordN)
+	score, _ = strconv.ParseInt(wordN, 10, 64)
+	relationalDb.Close()
+	return score
+}
+func (d *DBM) GetDocumentNumber() (score int) {
+	var docN string
+	relationalDb := NewRelationalDB("sqlite.db")
+	row := relationalDb.db.QueryRow(
+		"SELECT COUNT(DISTINCT PageID) FROM pageInfo")
+	row.Scan(&docN)
+	temp, _ := strconv.ParseInt(docN, 10, 64)
+	score = int(temp)
+	//fmt.Printf("\nWord with id=10: %v\n", relationalDb.WordOf(10))
+	relationalDb.Close()
+	return score
+}
+
+func GetWordNumberByID(wordID int) (score int64) {
+	var wordN string
+	relationalDb := NewRelationalDB("sqlite.db")
+	row := relationalDb.db.QueryRow(
+		"SELECT COUNT(word) FROM words WHERE wordID = ?", wordID)
+	row.Scan(&wordN)
+	score, _ = strconv.ParseInt(wordN, 10, 64)
+	relationalDb.Close()
+	return score
+}
+
+func (d *DBM) Getdf(wordId int) (score int) {
+	score = 0
 	mydb := d.db
 	invertedtable, err := mydb.Array("invertedtable")
 	if err != nil {
@@ -261,10 +438,10 @@ func (d *DBM) Getdf(wordId int) (df int) {
 	if temp != nil {
 		str := temp.(string)
 		statements := strings.Split(str, ";")
-		df = len(statements)
+		score = len(statements)
 	}
 
-	return df
+	return score
 }
 
 func (d *DBM) GetDocIdByWordID(wordId int) (docIDs []int64) {

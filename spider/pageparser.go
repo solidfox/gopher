@@ -19,10 +19,10 @@ import (
 const (
 	ChannelBuffer    = 100
 	MaxBytes         = 1000000
-	FetchRoutines    = 100
+	FetchRoutines    = 1
 	ConnectTimeout   = 30
 	ReadWriteTimeout = 30
-	RootPage         = "http://www.cse.ust.hk/"
+	RootPage         = "http://www.cse.ust.hk/~ericzhao/COMP4321/TestPages/testpage.htm"
 )
 
 // TODO dnsCache does two things. Should be split into a URLKeeper and a DNSCache.
@@ -81,6 +81,15 @@ func (d *dnsCache) getURL() string {
 
 func Get30Pages() []*Page {
 	pages := make([]*Page, 30)
+	pageChannel := GetPages()
+	for i, _ := range pages {
+		pages[i] = <-pageChannel
+	}
+	return pages
+}
+
+func Get300Pages() []*Page {
+	pages := make([]*Page, 100)
 	pageChannel := GetPages()
 	for i, _ := range pages {
 		pages[i] = <-pageChannel
