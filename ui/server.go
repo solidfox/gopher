@@ -59,7 +59,9 @@ func respondToApiCall(w io.Writer, r io.ReadCloser) {
 
 	err := json.Unmarshal(indata, &mess)
 	if err != nil {
-		log.Println("error:", err)
+		log.Println("Server: Received invalid api call: " + indata)
+		log.Println(err)
+		return
 	}
 
 	search.RespondToQuery(w, mess.Query)
