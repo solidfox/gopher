@@ -9,7 +9,7 @@ func main() {
 
 	db := spider.NewDBM("DBM.db")
 	pages := spider.Get30Pages()
-	db.StorePages2(pages)
+	db.StorePages(pages)
 
 	db.Close()
 

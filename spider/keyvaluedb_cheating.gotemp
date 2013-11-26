@@ -1,0 +1,165 @@
+package spider
+
+import (
+	"fmt"
+	//"gopher/ranker"
+	"io"
+	"strconv"
+	"strings"
+)
+
+func (d *DBM) GetInvertedIndex() (result map[int]string) {
+	result = make(map[int]string)
+	mydb := d.db
+	invertedtable, err := mydb.Array("invertedtable")
+	if err != nil {
+		fmt.Printf("Error:invertedtable can't find")
+		panic(err)
+	}
+	enum, err := invertedtable.Enumerator(true)
+	if err != nil {
+		panic(err)
+	}
+	key, value, err := enum.Next()
+	if err != io.EOF {
+		//fmt.Printf("Error:enum is empty")
+		//panic(err)
+	}
+	for ; err != io.EOF; key, value, err = enum.Next() {
+		integer := int(key[0].(int64))
+		str := value[0].(string)
+		result[integer] = str
+	}
+	return
+}
+
+func (d *DBM) GetPages2() (pages []*Page) {
+	relationalDb := NewRelationalDB("sqlite.db")
+	mydb := d.db
+
+	fowardtable, err := mydb.Array("fowardtable")
+	if err != nil {
+		fmt.Printf("Error:forward table disconnected")
+		//panic(err)
+	}
+
+	enum, err := fowardtable.Enumerator(true)
+	if err != nil {
+		fmt.Printf("Error:fowardtable can't find enum")
+		//panic(err)
+	}
+	//key, value, err := enum.Next()
+	key, value, err := enum.Next()
+	if err != io.EOF {
+		//fmt.Printf("Error:enum is empty")
+		//panic(err)
+	}
+	//fmt.Printf("%v    %v\n", key[0], value[0])
+	for ; err != io.EOF; key, value, err = enum.Next() {
+		page := NewPage()
+
+		//relationalDb.CompleteThePageInfoOf(pages)
+		//fmt.Printf("-----------------------------------------------\n")
+		//fmt.Printf("%v    %v\n", key[0], value[0])
+		//To keep it safe
+		if key[0] != nil {
+			page.PageID = key[0].(int64)
+			//To keep it safe
+			if value[0] != nil {
+				//handle the long string
+				longstr := value[0].(string)
+				oneWordStatement := strings.Split(longstr, ";")
+				var words []*Word
+				for _, statement := range oneWordStatement {
+					word := NewWord("")
+					var wordId, wordTF int
+					var pos []int
+					items := strings.Fields(statement)
+					for index, item := range items {
+						if index == 0 {
+							wordId, _ = strconv.Atoi(item)
+						} else if index == 1 {
+
+							wordTF, _ = strconv.Atoi(item)
+							if wordTF == 10000 {
+
+							}
+						} else {
+							temp, _ := strconv.Atoi(item)
+							pos = append(pos, temp)
+						}
+					}
+					word.WordID = wordId
+					word.Word = relationalDb.WordOf(wordId)
+					word.positions = pos
+					words = append(words, word)
+				}
+				page.SetWords(words)
+
+			}
+
+		}
+		pages = append(pages, page)
+	}
+	relationalDb.CompleteThePageInfoOf(pages)
+	relationalDb.Close()
+	//mydb.Close()
+	//pages = append(pages, NewPage())
+	return pages
+}
+
+func (d *DBM) docLength(docId int64) (length int) {
+	length = 0
+	mydb := d.db
+	fowardtable, err := mydb.Array("fowardtable")
+	if err != nil {
+		fmt.Printf("Error:forward table disconnected")
+		//panic(err)
+	}
+
+	temp, _ := fowardtable.Get(docId)
+	longstr := temp.(string)
+	statements := strings.Split(longstr, ";")
+	for _, statement := range statements {
+		tokens := strings.Fields(statement)
+
+		if len(tokens) != 0 {
+			temp, _ := strconv.ParseInt(tokens[1], 10, 64)
+			//fmt.Printf("%v\n", temp)
+			length += int(temp)
+		}
+	}
+	// for ; err != io.EOF; key, value, err = enum.Next() {
+	// 	docId2 := key[0].(int64)
+	// 	if docId == docId2 {
+	// 		longstr := value[0].(string)
+	// 		statements := strings.Split(longstr, ";")
+	// 		for _, statement := range statements {
+	// 			tokens := strings.Fields(statement)
+
+	// 			if len(tokens) != 0 {
+	// 				temp, _ := strconv.ParseInt(tokens[1], 10, 64)
+	// 				//fmt.Printf("%v\n", temp)
+	// 				length += int(temp)
+	// 			}
+	// 		}
+	// 	}
+	// }
+	return length
+}
+
+func (d *DBM) aveDocLength() (length float64) {
+	N := float64(d.rdb.PageCount())
+	if TotalDocLen == 0.0 {
+		length = 0
+		docIds := d.GetAllDocId()
+		for _, docId := range docIds {
+			length += float64(d.docLength(docId))
+		}
+		TotalDocLen = length
+	} else {
+		length = TotalDocLen
+	}
+
+	return (length / N)
+}

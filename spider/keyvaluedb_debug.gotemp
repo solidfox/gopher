@@ -1,0 +1,36 @@
+package spider
+
+import (
+	"fmt"
+	"github.com/cznic/exp/dbm"
+	//"gopher/ranker"
+	"io"
+	"math"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+)
+
+func (d *DBM) DisplayInvertedTable() {
+	mydb := d.db
+	invertedtable, err := mydb.Array("invertedtable")
+	if err != nil {
+		fmt.Printf("Error:invertedtable can't find")
+		panic(err)
+	}
+	enum, err := invertedtable.Enumerator(true)
+	if err != nil {
+		panic(err)
+	}
+	key, value, err := enum.Next()
+	if err != io.EOF {
+		//fmt.Printf("Error:enum is empty")
+		//panic(err)
+	}
+	for ; err != io.EOF; key, value, err = enum.Next() {
+		integer := key[0].(int64)
+		str := value[0].(string)
+		fmt.Printf("%v:%v\n", integer, str)
+	}
+}
