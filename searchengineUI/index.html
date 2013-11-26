@@ -367,7 +367,6 @@ $('#frontSearchButton').click(function(){
 });
 
 
-var exporse
 function writeToTable(data){
 
 	exporse = data;
@@ -381,8 +380,8 @@ function writeToTable(data){
 
 		var keywords = '';
 
-		if( data[i].Description){
-			$.each(data[i].Description, function(index, value){
+		if( data[i].Keywords){
+			$.each(data[i].Keywords, function(index, value){
 
 				keywords += value.Word + " ";
 
@@ -392,25 +391,36 @@ function writeToTable(data){
 		htmlstr += '<tr><td><ul class="side-nav"><li class="active"><h3>Score: ' + data[i].Score + "</h3><br><a class='sim' keys=\'" + keywords +"\'>similar pages</a></li></ul></td>";
 
 
+		var date = new Date(data[i].ModificationDate);
+
 		htmlstr += "<td><h2><a href=\'" + data[i].Url +"\'>" + data[i].Title + '</a></h2>';
 		htmlstr += '<h3><small>' + data[i].Url + '';
-		htmlstr += '<br>' + data[i].ModificationDate + ', ' + data[i].Size +'<br>';
+		htmlstr += '<br>' + date.toDateString() + ', ' + data[i].Size +' bytes<br>';
 		htmlstr += '</small></h3>';
 
-		htmlstr += '<small>';
-		// for( var j = 0 ; j < data[i].keywords.length ; j++){
-		// 	htmlstr += ''+ data[i].keywords[j].Word + ' ' + data[i].keywords[j].Freq  +'; '
-		// }
+		htmlstr += '<small><p>';
+		for( var j = 0 ; j < data[i].Keywords.length ; j++){
+			htmlstr += ''+ data[i].Keywords[j].Word + ' ' + data[i].Keywords[j].Freq  +'; '
+		}
 
-		htmlstr += '<h3>Parents</h3><p>'
+		htmlstr += '</p><h3>Parents</h3><p>'
 		for( var j = 0 ; j < data[i].Parents.length ; j++){
-			htmlstr += data[i].Parents[j].Title + ' '+ data[i].Parents[j].URL  +'<br>'
+			// htmlstr += data[i].Parents[j].Title + ' '+ data[i].Parents[j].URL  +'<br>'
+			if( data[i].Children[j].Title){
+				htmlstr += "<a href='" + data[i].Parents[j].URL + "'>" +  data[i].Parents[j].Title +   '</a><br>'
+			}else if( data[i].Children[j].URL)
+				htmlstr += "<a href='" + data[i].Parents[j].URL + "'>" +  data[i].Parents[j].URL +   '</a><br>'
+
 		}
 
 		htmlstr += "</p><h3>Children</h3><p>"
 
 		for( var j = 0 ; j < data[i].Children.length ; j++){
-			htmlstr += data[i].Children[j].Title + ' '+ data[i].Children[j].URL  +'<br>'
+
+			if( data[i].Children[j].Title){
+				htmlstr += "<a href='" + data[i].Children[j].URL + "'>" +  data[i].Children[j].Title +   '</a><br>'
+			}else if( data[i].Children[j].URL)
+				htmlstr += "<a href='" + data[i].Children[j].URL + "'>" +  data[i].Children[j].URL +   '</a><br>'
 		}
 
 		htmlstr += '</p></small></td></tr>';
