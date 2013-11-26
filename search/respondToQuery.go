@@ -16,7 +16,7 @@ func RespondToQuery(w io.Writer, q string) {
 		query.AddText(word)
 	}
 
-	r := ranker.NewRanker(0)
+	r := ranker.NewRanker()
 	results := r.Search(query)
 
 	encoder := json.NewEncoder(w)
