@@ -46,6 +46,8 @@ func ServeSearchEngine(w http.ResponseWriter, r *http.Request) {
 	switch url {
 	case "/api":
 		respondToApiCall(w, r.Body)
+	case "/index":
+		respondToIndexCall(w, r.Body)
 	default:
 		http.ServeFile(w, r, "searchengineUI"+url)
 	}
@@ -65,4 +67,18 @@ func respondToApiCall(w io.Writer, r io.ReadCloser) {
 	}
 
 	search.RespondToQuery(w, mess.Query)
+}
+
+func respondToIndexCall(w io.Writer, r io.ReadCloser) {
+	var mess *message
+
+	indata, _ := ioutil.ReadAll(r)
+
+	err := json.Unmarshal(indata, &mess)
+	if err != nil {
+		log.Println("error:", err)
+	}
+
+	search.RespondToIndex(w, mess.Query)
+
 }
