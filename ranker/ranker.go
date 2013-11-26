@@ -1,13 +1,11 @@
 package ranker
 
 import (
-	"fmt"
 	"gopher/spider"
 	"time"
 )
 
 type Ranker struct {
-	option int
 }
 
 type Link struct {
@@ -19,28 +17,30 @@ type ResultPage struct {
 	Title            string
 	Url              string
 	Description      string
-	Score            float64
+	Score            float32
 	ModificationDate time.Time
 	Size             int
 	Parents          []Link
 	Children         []Link
 }
 
-func NewRanker(option int) *Ranker {
-	return &Ranker{option}
+func NewRanker() *Ranker {
+	return &Ranker{}
 }
 
 func (r *Ranker) Search(query *spider.Page) []*ResultPage {
-	pageIDs, scores := SearchingResult(query)
-	fmt.Printf("\npageID: %v\n", pageIDs)
-	fmt.Printf("Score: %v\n", scores)
-	db := spider.NewRelationalDB("sqlite.db")
-	pages := make([]*spider.Page, len(pageIDs))
-	//resultPages := make([]*ResultPage, len(pageIDs))
-	for i, id := range pageIDs {
-		pages[i] = spider.NewPage()
-		pages[i].PageID = id
+	dbm := spider.NewDBM(spider.DBMname)
+	defer dbm.Close()
+	pages, scores := dbm.GetPagesForQuery(query)
+	results := make([]*ResultPage, len(pages))
+	var rdb *spider.RelationalDB
+	rdb = dbm.RDB()
+	rdb.LoadParentsFor(pages)
+	for i, page := range pages {
+		results[i] = &ResultPage{
+			Title: page.Title,
+			Score: scores[i],
+		}
 	}
-	db.CompleteThePageInfoOf(pages)
-	return []*ResultPage{&ResultPage{Title: query.Words()[0].Word}}
+	return results
 }
