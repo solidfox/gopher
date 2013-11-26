@@ -76,6 +76,9 @@ func (r *Ranker) Search(query *spider.Page) []ResultPage {
 	}
 	db.CompleteThePageInfoOf(pages)
 	results := make([]ResultPage, len(pages))
+	fmt.Println("Loaded page info")
+	db.LoadParentsFor(pages)
+	db.LoadChildrenFor(pages)
 
 	for i, page := range pages {
 

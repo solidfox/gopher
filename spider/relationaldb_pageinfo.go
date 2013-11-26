@@ -85,7 +85,7 @@ func (rdb *RelationalDB) insertLink(
 func checkErr(m string, err error) {
 	if err != nil {
 		log.Print(m + ": ")
-		log.Fatal(err)
+		panic(err)
 	}
 }
 
@@ -156,7 +156,7 @@ func (rdb *RelationalDB) LoadParentsFor(pages []*Page) {
 			log.Fatalln(p)
 		}
 		rows, err := getParents.Query(p.PageID)
-		if err == nil {
+		if err != nil {
 			log.Fatalln(err)
 		}
 		for rows.Next() {
@@ -179,14 +179,14 @@ func (rdb *RelationalDB) LoadChildrenFor(pages []*Page) {
 			log.Fatalln(p)
 		}
 		rows, err := getChildren.Query(p.PageID)
-		if err == nil {
+		if err != nil {
 			log.Fatalln(err)
 		}
 		for rows.Next() {
 			link := &Link{}
 			rows.Scan(&link.Title, &link.URL)
 			children = append(children, link)
-			p.Parents = children
+			p.Children = children
 		}
 	}
 }

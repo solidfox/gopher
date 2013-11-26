@@ -169,7 +169,7 @@ func parsePage(pageUrl string, dns *dnsCache) *Page {
 	// log.Println(" " + pageUrl + " pre")
 	ipURL := dns.lookupURL(pageUrl)
 	res, err := client.Get(ipURL)
-	// log.Println(" " + pageUrl + " post")
+	log.Println(" " + pageUrl + " post")
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -192,10 +192,10 @@ func parsePage(pageUrl string, dns *dnsCache) *Page {
 	p.URL = pageUrl
 	p.Modified = pageDate
 
-	// log.Println("Will trigger tokenizer.")
+	log.Println("Will trigger tokenizer.")
 	body := NewCountingReader(res.Body)
 	z := html.NewTokenizer(body)
-	// log.Println("Tokenizer triggered.")
+	log.Println("Tokenizer triggered.")
 	for {
 		if body.ByteCount() > MaxBytes {
 			log.Println("Skipping page larger than " + strconv.FormatInt(body.ByteCount(), 10) + ": " + pageUrl)
@@ -205,7 +205,7 @@ func parsePage(pageUrl string, dns *dnsCache) *Page {
 		switch token {
 		case html.ErrorToken:
 			p.Size = body.ByteCount()
-			// log.Println(" " + pageUrl + " success")
+			log.Println(" " + pageUrl + " success")
 			return p
 		case html.StartTagToken:
 			tagName, hasAttr := z.TagName()

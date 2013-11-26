@@ -397,14 +397,16 @@ function writeToTable(data){
 		// 	htmlstr += ''+ data[i].keywords[j].Word + ' ' + data[i].keywords[j].Freq  +'; '
 		// }
 
-		// htmlstr += '<br>'
-		// for( var j = 0 ; j < data[i].parent.length ; j++){
-		// 	htmlstr += ''+ data[i].parent[j].Url  +'<br>'
-		// }
+		htmlstr += 'parent:<br>'
+		for( var j = 0 ; j < data[i].Parents.length ; j++){
+			htmlstr += data[i].Parents[j].Title + ' '+ data[i].Parents[j].URL  +'<br>'
+		}
 
-		// for( var j = 0 ; j < data[i].child.length ; j++){
-		// 	htmlstr += ''+ data[i].child[j].Url  +'<br>'
-		// }
+		htmlstr += "children:<br>"
+
+		for( var j = 0 ; j < data[i].Children.length ; j++){
+			htmlstr += data[i].Children[j].Title + ' '+ data[i].Children[j].URL  +'<br>'
+		}
 
 		htmlstr += '</small></h4></td></tr>';
 	}
@@ -583,17 +585,51 @@ else
 var autoSuggestion;
 
 
-// $.ajax({
-// 	type :"POST",
-// 	url : "/index",
-// 	success:	function( data ) {
+function one(){
 
-// 		console.log(data);
-// 		autoSuggestion = data;
-//   		$("#frontSearch").autocomplete(autoSuggestion, {matchContains: true});
-//   		}  
+		var queryArray = new Array();
 
-// });
+		var a = getQueryHistory();
+		data = a.split(';');
+
+		// console.log( typeof a);
+
+
+		$.each(data, function(index,query){
+
+			var patt = / +/g;
+
+
+			// handle phrase
+			var phrase = query.match(/\".+?\"/g);
+			if( phrase != null ){
+				$.each(phrase, function(index,value){
+
+					queryArray.push(value.replace(/\"/g,""));
+					query = query.replace(value, "");
+
+				});
+			}
+
+			// get normal terms
+			var sub = query.split(" ");
+
+			$.each(sub, function(index,value){
+
+				if( value.trim() != "" ){  
+					queryArray.push(value);
+				}
+			});
+
+
+		});
+
+
+		autoSuggestion = queryArray;
+  		$("#frontSearch").autocomplete(autoSuggestion, {matchContains: true});
+  		  
+}
+one();
 
   
 </script>
