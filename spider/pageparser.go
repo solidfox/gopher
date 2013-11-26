@@ -116,7 +116,8 @@ func GetPages() <-chan *Page {
 				case newURL := <-urlChannel:
 					urls.addURL(newURL)
 				case <-time.After((ConnectTimeout + ReadWriteTimeout) * time.Second):
-					log.Fatalln("Reached the end of the internet. (No new links to follow.)")
+					log.Println("Reached the end of the internet. (No new links to follow.)")
+					return
 				}
 			}
 
