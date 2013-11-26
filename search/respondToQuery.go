@@ -31,14 +31,15 @@ func RespondToQuery(w io.Writer, q string) {
 
 func RespondToIndex(w io.Writer, q string) {
 
-	r := ranker.NewRanker(0)
-	results := r.GetIndex()
+	db := spider.NewRelationalDB("sqlite.db")
+
+	results := db.GetIndex()
 
 	encoder := json.NewEncoder(w)
 	// fmt.Fprintln(w, "[")
 
 	// for _, result := range results {
-	encoder.Encode(result)
+	encoder.Encode(results)
 	// }
 
 	// fmt.Fprintln(w, "]")

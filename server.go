@@ -61,7 +61,7 @@ func respondToApiCall(w io.Writer, r io.ReadCloser) {
 
 	err := json.Unmarshal(indata, &mess)
 	if err != nil {
-		log.Println("Server: Received invalid api call: " + indata)
+		log.Println("Server: Received invalid api call: " + string(indata))
 		log.Println(err)
 		return
 	}

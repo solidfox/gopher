@@ -71,10 +71,11 @@ func (rdb *RelationalDB) WordCount() (count int64) {
 func (rdb *RelationalDB) GetIndex() (words []*string) {
 	row, _ := rdb.db.Query("SELECT word FROM words")
 
-	words = make([]string, 100)
+	words = make([]*string, 0, 100)
 	for row.Next() {
-		row.Scan(&words)
-
+		var word *string
+		row.Scan(word)
+		words = append(words, word)
 	}
 	return words
 }
