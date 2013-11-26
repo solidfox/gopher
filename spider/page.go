@@ -47,7 +47,7 @@ var stopwords []string
 func stopwordFilter() func(string) bool {
 	if len(stopwords) == 0 {
 		stopwordFile, _ := ioutil.ReadFile("stopwords.txt")
-		stopwords := sort.StringSlice(strings.Fields(string(stopwordFile)))
+		stopwords = sort.StringSlice(strings.Fields(string(stopwordFile)))
 		stopwords.Sort()
 	}
 
