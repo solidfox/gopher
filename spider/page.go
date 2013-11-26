@@ -109,6 +109,35 @@ func (p *Page) AddText(text string) {
 	}
 }
 
+func (p *Page) AddQueryWord(word string) {
+	word = strings.TrimSpace(word)
+	if word == "" {
+		return
+	}
+	word = strings.ToLower(word)
+	words := strings.Fields(word)
+
+	for _, aWord := range words {
+		if !p.wordValid(aWord) {
+			aWord = ""
+		}
+
+		aWord = string(stemmer.Stem([]byte(aWord)))
+
+	}
+
+	word = strings.Join(words, " ")
+
+	wordObj, exists := p.words[word]
+	position := p.wordCount + 1
+	if !exists {
+		wordObj = NewWord(word)
+	}
+	wordObj.positions = append(wordObj.positions, position)
+	p.words[word] = wordObj
+	p.wordCount++
+}
+
 // Adds links with their associated anchor text.
 func (p *Page) AddLink(relativeURL string, text string) {
 	baseURI, err1 := url.Parse(p.URL)

@@ -362,44 +362,49 @@ $('#frontSearchButton').click(function(){
 });
 
 
-
+var exporse
 function writeToTable(data){
 
+	exporse = data;
+	data = jQuery.parseJSON(exporse);
 	var htmlstr = '<table style=\'min-width:100% !important;\'><tbody>';
 	for( var i = 0 ; i < data.length; i++){
+
 
 		if( i >= 50) break;
 
 
 		var keywords = '';
-		$.each(data[i].keywords, function(index, value){
 
-			keywords += value.word + " ";
+		if( data[i].Description){
+			$.each(data[i].Description, function(index, value){
 
-		});
+				keywords += value.Word + " ";
+
+			});
+		}
+
+		htmlstr += '<tr><td><ul class="side-nav"><li class="active"><h3>Score: ' + data[i].Score + "</h3><br><a class='sim' keys=\'" + keywords +"\'>similar pages</a></li></ul></td>";
 
 
-		htmlstr += '<tr><td><ul class="side-nav"><li class="active"><h3>Score: ' + data[i].score + "</h3><br><a class='sim' keys=\'" + keywords +"\'>similar pages</a></li></ul></td>";
-
-
-		htmlstr += "<td><h2><a href=\'" + data[i].url +"\'>" + data[i].title + '</a></h2>';
-		htmlstr += '<h3><small>' + data[i].url + '';
-		htmlstr += '<br>' + data[i].modificationDate + ', ' + data[i].size +'<br>';
+		htmlstr += "<td><h2><a href=\'" + data[i].Url +"\'>" + data[i].Title + '</a></h2>';
+		htmlstr += '<h3><small>' + data[i].Url + '';
+		htmlstr += '<br>' + data[i].ModificationDate + ', ' + data[i].Size +'<br>';
 		htmlstr += '</small></h3>';
 
 		htmlstr += '<h4><small>';
-		for( var j = 0 ; j < data[i].keywords.length ; j++){
-			htmlstr += ''+ data[i].keywords[j].word + ' ' + data[i].keywords[j].freq  +'; '
-		}
+		// for( var j = 0 ; j < data[i].keywords.length ; j++){
+		// 	htmlstr += ''+ data[i].keywords[j].Word + ' ' + data[i].keywords[j].Freq  +'; '
+		// }
 
-		htmlstr += '<br>'
-		for( var j = 0 ; j < data[i].parent.length ; j++){
-			htmlstr += ''+ data[i].parent[j].url  +'<br>'
-		}
+		// htmlstr += '<br>'
+		// for( var j = 0 ; j < data[i].parent.length ; j++){
+		// 	htmlstr += ''+ data[i].parent[j].Url  +'<br>'
+		// }
 
-		for( var j = 0 ; j < data[i].child.length ; j++){
-			htmlstr += ''+ data[i].child[j].url  +'<br>'
-		}
+		// for( var j = 0 ; j < data[i].child.length ; j++){
+		// 	htmlstr += ''+ data[i].child[j].Url  +'<br>'
+		// }
 
 		htmlstr += '</small></h4></td></tr>';
 	}
@@ -473,8 +478,9 @@ function reSearchFunc(query){
 	$.ajax({
 		type :"POST",
 		url : "/api",
-		data : JSON.stringify(queryArray),
+		data : JSON.stringify({Query:queryArray}),
 		success : function( data ) {
+			console.log(data);
     		writeToTable(data);
 		}
 
@@ -576,22 +582,20 @@ else
 
 var autoSuggestion;
 
-// $.getJSON( "sampleindex.php", 
 
-$.ajax({
-	type :"POST",
-	url : "/index",
-	success:	function( data ) {
+// $.ajax({
+// 	type :"POST",
+// 	url : "/index",
+// 	success:	function( data ) {
 
-		console.log(data);
-		autoSuggestion = data;
-  		$("#frontSearch").autocomplete(autoSuggestion, {matchContains: true});
-  		}  
+// 		console.log(data);
+// 		autoSuggestion = data;
+//   		$("#frontSearch").autocomplete(autoSuggestion, {matchContains: true});
+//   		}  
 
-};
+// });
 
-	// });
-;  
+  
 </script>
 </body>
 </html>

@@ -96,8 +96,8 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 	var scores []float64
 	var pageIDs []int64
 	QWords := query.Words()
-	QWords[0].Word = "shuten" + " " + "doji"
-	QWords = QWords[:2]
+	// QWords[0].Word = "shuten" + " " + "doji"
+	// QWords = QWords[:2]
 	for _, word := range QWords {
 		fmt.Printf("Qword:%v\n", word.Word)
 	}
@@ -161,7 +161,7 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 	// 	fmt.Printf("querry words:%v\n", word.Word)
 	// }
 
-	MaxNumPageReturn := 10
+	MaxNumPageReturn := 50
 	for i := 0; i < MaxNumPageReturn; i++ {
 		maxIndex := 0
 		maxValue := 0.0

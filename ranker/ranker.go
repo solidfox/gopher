@@ -21,16 +21,16 @@ type ResultPage struct {
 	Description      string
 	Score            float64
 	ModificationDate time.Time
-	Size             int
-	Parents          []Link
-	Children         []Link
+	Size             int64
+	Parents          []*spider.Link
+	Children         []*spider.Link
 }
 
 func NewRanker(option int) *Ranker {
 	return &Ranker{option}
 }
 
-func (r *Ranker) Search(query *spider.Page) []*ResultPage {
+func (r *Ranker) Search(query *spider.Page) []ResultPage {
 	pageIDs, scores := SearchingResult(query)
 	fmt.Printf("\npageID: %v\n", pageIDs)
 	fmt.Printf("Score: %v\n", scores)
@@ -42,5 +42,19 @@ func (r *Ranker) Search(query *spider.Page) []*ResultPage {
 		pages[i].PageID = id
 	}
 	db.CompleteThePageInfoOf(pages)
-	return []*ResultPage{&ResultPage{Title: query.Words()[0].Word}}
+	results := make([]ResultPage, len(pages))
+
+	for i, page := range pages {
+		results[i] = ResultPage{
+			Title:            page.Title,
+			Url:              page.URL,
+			Score:            scores[i],
+			ModificationDate: page.Modified,
+			Size:             page.Size,
+			Parents:          page.Parents,
+			Children:         page.Children,
+		}
+	}
+
+	return results
 }

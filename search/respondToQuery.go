@@ -6,14 +6,14 @@ import (
 	"gopher/ranker"
 	"gopher/spider"
 	"io"
-	"strings"
+	// "strings"
 )
 
-func RespondToQuery(w io.Writer, q string) {
+func RespondToQuery(w io.Writer, q []string) {
 	query := spider.NewPage()
 
-	for _, word := range strings.Fields(q) {
-		query.AddText(word)
+	for _, word := range q {
+		query.AddQueryWord(word)
 	}
 
 	r := ranker.NewRanker(0)
@@ -22,14 +22,17 @@ func RespondToQuery(w io.Writer, q string) {
 	encoder := json.NewEncoder(w)
 	fmt.Fprintln(w, "[")
 
-	for _, result := range results {
+	for i, result := range results {
 		encoder.Encode(result)
+		if i < len(results)-1 {
+			fmt.Fprint(w, ",")
+		}
 	}
 
 	fmt.Fprintln(w, "]")
 }
 
-func RespondToIndex(w io.Writer, q string) {
+func RespondToIndex(w io.Writer) {
 
 	db := spider.NewRelationalDB("sqlite.db")
 

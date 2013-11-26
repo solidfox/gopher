@@ -15,7 +15,7 @@ import (
 )
 
 type message struct {
-	Query string
+	Query []string
 }
 
 func init() {
@@ -70,15 +70,15 @@ func respondToApiCall(w io.Writer, r io.ReadCloser) {
 }
 
 func respondToIndexCall(w io.Writer, r io.ReadCloser) {
-	var mess *message
+	// var mess *message
 
-	indata, _ := ioutil.ReadAll(r)
+	// indata, _ := ioutil.ReadAll(r)
 
-	err := json.Unmarshal(indata, &mess)
-	if err != nil {
-		log.Println("error:", err)
-	}
+	// err := json.Unmarshal(indata, &mess)
+	// if err != nil {
+	// 	log.Println("error:", err)
+	// }
 
-	search.RespondToIndex(w, mess.Query)
+	search.RespondToIndex(w)
 
 }

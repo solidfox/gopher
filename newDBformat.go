@@ -54,6 +54,7 @@ func dbConnect(name string) *dbm.DB {
 }
 func main() {
 	mydb := NewDBM(DBMname).db
+	defer mydb.Close()
 	test, _ := mydb.Array("test")
 	test.Set(1, "Peter", "Chan")
 	test.Set(2, "Amy", "Lee")
@@ -79,6 +80,5 @@ func main() {
 	// str := key[0].(string)
 	// integer := value[0].(int64)
 	// fmt.Printf("key=%v\nvalue=%v\n", str, integer)
-	mydb.Close()
 
 }
