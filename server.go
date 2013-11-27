@@ -7,6 +7,7 @@ package main
 
 import (
 	"encoding/json"
+	"gopher/ranker"
 	"gopher/search"
 	"io"
 	"io/ioutil"
@@ -23,6 +24,9 @@ func init() {
 }
 
 func main() {
+	//jason's init of pages
+	ranker.PreCompute()
+
 	port := ":8081"
 	s := &http.Server{
 		Addr:    port,

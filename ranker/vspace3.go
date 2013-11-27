@@ -28,17 +28,16 @@ func contain(list []int64, item int64) bool {
 	return false
 }
 
-func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []float64, top5FreqWord []string) {
-	//query.wo
+var allPagesWithTFIDF []SPage
+var allStoredPages []*spider.Page
+var invertedTable map[int][]int64
 
-	//storing page with TFIDF
-	resultScores = nil
-	resultPageIDs = nil
+func PreCompute() {
 	db := spider.NewDBM(spider.DBMname)
 	invertedindex := db.GetInvertedIndex()
-	allStoredPages := db.GetPages2()
+	allStoredPages = db.GetPages2()
 	//computeAveDocLen(allStoredPages)
-	invertedTable := make(map[int][]int64)
+	invertedTable = make(map[int][]int64)
 	for index, temp := range invertedindex {
 		terms := strings.Split(temp, ";")
 		for _, term := range terms {
@@ -49,7 +48,6 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 		}
 	}
 
-	var allPagesWithTFIDF []SPage
 	//compute allPagesWithTFIDF
 	fmt.Printf("Document number in allstoredpage:%v", len(allStoredPages))
 	for _, page := range allStoredPages {
@@ -77,6 +75,17 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 
 		allPagesWithTFIDF = append(allPagesWithTFIDF, tempPage)
 	}
+
+	db.Close()
+}
+
+func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []float64, top5FreqWord []string) {
+	//query.wo
+
+	//storing page with TFIDF
+	resultScores = nil
+	resultPageIDs = nil
+
 	//fmt.Printf("len of allPagesWithTFIDF:%v	\n", len(allPagesWithTFIDF))
 	// for _, pageWithTFIDF := range allPagesWithTFIDF {
 	// 	//allPagesWithTFIDF
@@ -175,15 +184,15 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 		//Freq5Word = append(Freq5Word, newFreq)
 	}
 
-	for _, word := range allPagesWithTFIDF[53-1].myWord {
-		if word.Word.Word == "demon" {
-			fmt.Printf("str: %v", word.Word.Word)
-		}
+	// for _, word := range allPagesWithTFIDF[53-1].myWord {
+	// 	if word.Word.Word == "demon" {
+	// 		fmt.Printf("str: %v", word.Word.Word)
+	// 	}
 
-	}
-	fmt.Printf("\n%v\n", allPagesWithTFIDF[53-1].Page.URL)
-	fmt.Printf("pageIDs:%v    ", pageIDs)
-	fmt.Printf("scores:%v\n", scores)
+	// }
+	// fmt.Printf("\n%v\n", allPagesWithTFIDF[53-1].Page.URL)
+	// fmt.Printf("pageIDs:%v    ", pageIDs)
+	// fmt.Printf("scores:%v\n", scores)
 
 	// for _, word := range query.Words() {
 	// 	fmt.Printf("querry words:%v\n", word.Word)
@@ -213,7 +222,7 @@ func SearchingResult(query *spider.Page) (resultPageIDs []int64, resultScores []
 	}
 	elapse := time.Since(Start)
 	fmt.Printf("Time used in search=%v\n", elapse)
-	db.Close()
+
 	// elapse := time.Since(Start)
 	// fmt.Printf("Time used in search=%v", elapse)
 	return
